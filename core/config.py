@@ -8,7 +8,7 @@ from pathlib import Path
 IS_WINDOWS = sys.platform.startswith("win")
 
 APP_NAME = "Media Organizer"
-APP_VERSION = "0.2.0"
+APP_VERSION = "1.0.0"
 
 # Raiz do projecto (pasta onde está o app.py). Pode ser alterada com a
 # variável de ambiente MEDIAORGANIZER_HOME (útil para testes).
@@ -23,7 +23,7 @@ QUARANTINE_DIR = APP_ROOT / "quarantine"
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 
 QUARANTINE_CATEGORIES = ("Duplicados", "Ficheiros_0_bytes", "Identificacao_Incerta", "Conflitos",
-                         "Restos_Organizacao")
+                         "Restos_Organizacao", "Revertidos")
 
 
 def ensure_dirs() -> None:
@@ -42,7 +42,7 @@ DEFAULT_SETTINGS: dict = {
     "auto_delete": False,          # bloqueado: nunca é activado pela aplicação
     "quarantine_enabled": True,
     "logging_enabled": True,
-    "backups_enabled": False,
+    "backups_enabled": True,
     "incremental": True,
     "allow_cross_device_move": False,  # entre discos: copia+verifica e mantém o original
     # Jellyfin
@@ -54,6 +54,24 @@ DEFAULT_SETTINGS: dict = {
     "tmdb_api_key": "",
     "tmdb_language": "en-US",
     "last_rename_batch": "",
+    # Legendas e tradução (Fases 4–5)
+    "opensubtitles_api_key": "",
+    "opensubtitles_username": "",
+    "opensubtitles_password": "",
+    "opensubtitles_max_per_run": 10,
+    "translate_max_per_run": 5,
+    # Metadados (Fase 6)
+    "tmdb_metadata_language": "pt-PT",
+    # Música (Fase 7)
+    "music_mode": "copy",            # copy = original intacto; move = mover
+    "musicbrainz_enabled": False,
+    "last_music_batch": "",
+    # Automatização (Fase 9)
+    "auto_apply_medium": False,
+    "schedule_mode": "automatico",
+    # Jellyfin (Fase 10)
+    "jellyfin_url": "",
+    "jellyfin_api_key": "",
     # Técnico
     "ffprobe_timeout": 30,
     "first_run_done": False,

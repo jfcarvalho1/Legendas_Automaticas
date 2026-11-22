@@ -181,12 +181,77 @@ class SafeFileManager:
             self._mark_media_status(src, dst, "quarantined")
         return op
 
+    # -- criar / copiar -----------------------------------------------------
+    def create_file(self, dst: Path | str, data: bytes, operation: str = "create",
+                    reason: str | None = None, details: dict | None = None) -> dict:
+        """Cria um ficheiro novo (legenda, capa, NFO…). Nunca escreve por cima."""
+        dst = Path(dst)
+        op_id = self.ops.new_operation_id()
+        details = dict(details or {})
+        try:
+            check_destination(dst)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            tmp = dst.with_name(dst.name + ".mo-partial")
+            tmp.write_bytes(data)
+            os.replace(tmp, dst)
+            if not dst.exists() or dst.stat().st_size != len(data):
+                raise SafetyError("Validação falhou após escrever o ficheiro.")
+            details["size"] = len(data)
+            self.ops.add_file(op_id, str(dst), "created", hashlib.sha256(data).hexdigest(), len(data))
+            self.ops.record(op_id, operation, None, str(dst), COMPLETED,
+                            result="Ficheiro criado.", reason=reason, details=details)
+        except Exception as e:  # noqa: BLE001
+            self.ops.record(op_id, operation, None, str(dst), FAILED, error=str(e),
+                            reason=reason, details=details)
+            self.db.log_error("error", "safety", str(dst), f"{operation}: {e}")
+            raise
+        return self.ops.get(op_id)
+
+    def safe_copy(self, src: Path | str, dst: Path | str, reason: str | None = None,
+                  details: dict | None = None) -> dict:
+        """Copia e valida por SHA256. O original fica sempre intacto."""
+        src, dst = Path(src), Path(dst)
+        op_id = self.ops.new_operation_id()
+        details = dict(details or {})
+        try:
+            check_source(src)
+            check_destination(dst)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            h = sha256_file(src)
+            tmp = dst.with_name(dst.name + ".mo-partial")
+            shutil.copy2(src, tmp)
+            if sha256_file(tmp) != h:
+                tmp.unlink(missing_ok=True)
+                raise SafetyError("A cópia não corresponde ao original (SHA256).")
+            os.rename(tmp, dst)
+            details.update({"sha256": h, "size": src.stat().st_size, "original_name": src.name})
+            self.ops.add_file(op_id, str(dst), "destination", h, details["size"])
+            self.ops.record(op_id, "copy", str(src), str(dst), COMPLETED,
+                            result="Copiado e validado; original intacto.", reason=reason,
+                            details=details)
+        except Exception as e:  # noqa: BLE001
+            self.ops.record(op_id, "copy", str(src), str(dst), FAILED, error=str(e),
+                            reason=reason, details=details)
+            self.db.log_error("error", "safety", str(src), f"copy: {e}")
+            raise
+        return self.ops.get(op_id)
+
     # -- reposição ---------------------------------------------------------
     def revert(self, op_id: str) -> dict:
         op = self.ops.get(op_id)
         ok, why = self.ops.can_revert(op)
         if not ok:
             raise SafetyError(why)
+        if op["operation"] in ("create", "copy"):
+            # desfazer uma criação/cópia = retirar o ficheiro novo (para a quarentena)
+            current = Path(op["new_path"])
+            if not current.exists():
+                raise SafetyError(f"O ficheiro já não está em: {current}")
+            q = self.quarantine(current, "Revertidos", f"Reversão de {op_id}",
+                                details={"reverts": op_id})
+            if q["status"] == COMPLETED:
+                self.ops.mark_reverted(op_id, q["operation_id"])
+            return q
         original, current = Path(op["original_path"]), Path(op["new_path"])
         if not current.exists():
             raise SafetyError(f"O ficheiro já não está em: {current}")
@@ -219,7 +284,7 @@ class SafeFileManager:
         """Reverte, pela ordem inversa, todas as operações concluídas de um lote."""
         ops = self.db.query(
             "SELECT operation_id FROM operations WHERE status='completed' "
-            "AND operation IN ('rename', 'move', 'quarantine') AND details LIKE ? "
+            "AND operation IN ('rename', 'move', 'quarantine', 'create', 'copy') AND details LIKE ? "
             "ORDER BY id DESC", (f'%"batch": "{batch_id}"%',))
         done, errors = 0, []
         created_dirs: set[Path] = set()

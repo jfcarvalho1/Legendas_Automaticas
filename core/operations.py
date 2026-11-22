@@ -25,7 +25,7 @@ COPIED = "copied"        # cópia validada, original mantido
 FAILED = "failed"
 REVERTED = "reverted"
 
-REVERSIBLE = {"move", "rename", "quarantine"}
+REVERSIBLE = {"move", "rename", "quarantine", "create", "copy"}
 
 
 class OperationManager:

@@ -1,26 +1,32 @@
 # Media Organizer
 
-Aplicação desktop local, gratuita e open source, para Ubuntu, que gere uma biblioteca de **filmes** e **música**: inventário, análise técnica, legendas, capas, metadados, duplicados e compatibilidade com **Jellyfin**. Os originais ficam sempre preservados.
+Aplicação desktop local, gratuita e open source (Windows e Ubuntu) para gerir uma biblioteca de **filmes** e **música** compatível com **Jellyfin**:
 
-> Versão actual: **0.2.0**: fundação, inventário e organização/renomeação de filmes (Fases 1–3).
-> A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
+- organiza e renomeia em `Título (Ano)/`;
+- encontra, converte e traduz legendas para **Português de Portugal**;
+- obtém capas e cria NFO e `metadata.json`;
+- organiza a música em `Artista/Álbum (Ano)/`;
+- encontra duplicados e corre tudo automaticamente, com agendamento diário.
 
-## Instalar no Windows
+**Os originais são sempre preservados**: nada é apagado, tudo fica registado e pode ser revertido.
 
-1. Nesta página do GitHub, carregue no botão verde **Code** → **Download ZIP**.
-2. Extraia o ZIP para uma pasta à sua escolha, por exemplo `Documentos\MediaOrganizer`.
-3. Abra essa pasta e faça **duplo clique em `instalar.bat`**.
-   Se o Windows mostrar "O Windows protegeu o seu PC", carregue em **Mais informações** → **Executar mesmo assim**.
+Versão: **1.0.0**. A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
+
+---
+
+## Instalar
+
+### Windows
+
+1. Nesta página, carregue no botão verde **Code** → **Download ZIP**.
+2. Extraia o ZIP para uma pasta, por exemplo `Documentos\MediaOrganizer`.
+3. Faça **duplo clique em `instalar.bat`**. Se o Windows mostrar "O Windows protegeu o seu PC", carregue em **Mais informações** → **Executar mesmo assim**.
 4. No fim aparece o atalho **Media Organizer** no Ambiente de Trabalho e no Menu Iniciar.
 
-O instalador trata de tudo: instala o Python 3.12 e o FFmpeg pelo `winget` se faltarem, cria o ambiente próprio da aplicação e os atalhos.
-Se a aplicação não abrir, faça duplo clique em `arrancar_com_consola.bat` para ver a mensagem de erro.
+O instalador instala o Python e o FFmpeg (pelo `winget`) se faltarem, e cria o ambiente da aplicação.
+Se a aplicação não abrir, faça duplo clique em `arrancar_com_consola.bat` para ver o erro.
 
-Pasta de filmes sugerida no Windows: `C:\Users\<utilizador>\Videos\Filmes` (pode ser alterada na Configuração).
-
-## Instalar (Ubuntu)
-
-Abra um terminal e cole:
+### Ubuntu
 
 ```bash
 cd ~
@@ -28,29 +34,43 @@ git clone https://github.com/jfcarvalho1/Legendas_Automaticas.git MediaOrganizer
 bash MediaOrganizer/instalar.sh
 ```
 
-O instalador:
-- instala apenas o que faltar no sistema (`ffmpeg`, `python3-venv`, `libxcb-cursor0`), pedindo a palavra-passe;
-- cria um ambiente Python próprio em `.venv` (não mexe no Python do sistema);
-- cria o atalho **Media Organizer** no menu de aplicações e no ambiente de trabalho.
-
-Depois disso basta abrir a aplicação pelo atalho.
-
 ### Actualizar
 
-```bash
-cd ~/MediaOrganizer && git pull && bash instalar.sh
-```
+- Windows: descarregue o ZIP de novo, extraia por cima da pasta antiga e corra `instalar.bat`.
+- Ubuntu: `cd ~/MediaOrganizer && git pull && bash instalar.sh`.
 
-A base de dados, os registos e a quarentena não são tocados pela actualização.
+A base de dados, os registos, os backups e a quarentena não são tocados pela actualização.
 
-## Organizar e renomear filmes
+---
 
-1. **Filmes** → **Analisar agora** (faz o inventário; não altera nada).
-2. **Organizar** → **Analisar e propor**: aparece a lista com o nome novo de cada filme.
-3. Reveja. Os incertos (sem ano no nome) não vêm seleccionados: duplo clique para corrigir título e ano.
-4. **Aplicar seleccionados**. Se não gostar do resultado: **Reverter último lote**.
+## Primeiros passos
 
-Resultado:
+1. Na primeira vez, indique a pasta dos **filmes** e a da **música**.
+2. **Filmes** → **Analisar agora**. Faz o inventário e não altera nada.
+3. **Organizar** → separador **Filmes** → **Analisar e propor** → reveja → **Aplicar seleccionados**.
+4. **Legendas** → **Procurar online** e/ou **Traduzir para pt-PT**.
+5. **Capas** → **Processar seleccionados / em falta**.
+6. **Música** → **Analisar agora** → **Organizar música…** → **Aplicar seleccionadas**.
+7. **Duplicados** → **Analisar duplicados**.
+8. **Automatização** → escolha o modo → **Executar agora**, ou **Activar** o agendamento diário.
+
+Serviços opcionais (todos gratuitos; configurar em **Configuração**):
+
+| Serviço | Para quê | Como obter |
+|---|---|---|
+| TMDb | confirmar título/ano, capas, sinopse, NFO completo | themoviedb.org → Definições → API |
+| OpenSubtitles | procurar e descarregar legendas | conta em opensubtitles.com + chave em opensubtitles.com/consumers |
+| Argos Translate | traduzir legendas sem internet | botão **Instalar motor de tradução** na página Legendas (~1 GB) |
+| MusicBrainz | completar anos de álbuns | não precisa de conta |
+| Jellyfin | actualizar a biblioteca no fim | Painel do Jellyfin → Chaves de API (na página Automatização) |
+
+Sem nenhum destes serviços, a aplicação continua a funcionar com os dados dos próprios ficheiros.
+
+---
+
+## O que faz cada módulo
+
+### Filmes: organizar e renomear
 
 ```
 Filmes/
@@ -63,72 +83,99 @@ Filmes/
     Interstellar (2014).metadata.json
 ```
 
-- Na pasta final **só ficam** o vídeo, as legendas, a capa, o NFO e o metadata.json.
-- **Legendas em subpastas** (`Subs/`, `Legendas/`, `Subs/2_English.srt`…) são recolhidas e renomeadas com o idioma (`.pt-PT`, `.pt-BR`, `.pt`, `.en`, …).
-- O resto (`.txt`, samples, `.nfo` de grupos de release, links, imagens extra) vai para a **quarentena** `Restos_Organizacao`, no mesmo disco, fora da biblioteca. Nada é apagado.
-- A pasta antiga, se ficar vazia, é removida; a reversão volta a criá-la.
+- Na pasta final **só ficam** o vídeo, as legendas, a capa, o NFO e o `metadata.json`. O resto (`.txt`, samples, `.nfo` de grupos de release, links, imagens extra) vai para a quarentena `Restos_Organizacao`.
+- As legendas que estão em **subpastas** (`Subs/`, `Legendas/`, `Subs/2_English.srt`…) são recolhidas e ficam com o idioma no nome (`.pt-PT`, `.pt-BR`, `.pt`, `.en`, `.forced`…).
+- Casos incertos (sem ano) nunca são alterados sem confirmação: duplo clique para corrigir.
 - Duas versões do mesmo filme ficam juntas: `Gladiator (2000).mkv` e `Gladiator (2000) - 720p.mkv`.
-- Nunca escreve por cima de um ficheiro existente; se houver conflito, o filme fica assinalado e não é tocado.
-- Opcional: com uma chave gratuita do **TMDb** (Configuração), título e ano são confirmados online.
+- Nunca escreve por cima de nada. Cada lote é reversível com **Reverter último lote**.
 
-## O que a versão 0.1 faz
+### Legendas e tradução
 
-| Área | Estado |
+- **Prioridade:** pt-PT → pt-BR → outros idiomas.
+- **Formatos:** SRT, ASS, SSA, VTT e SUB (MicroDVD) são convertidos para SRT UTF-8. As legendas em imagem (VobSub/PGS) são assinaladas, porque não é possível convertê-las em texto.
+- **Idioma:** é detectado pelo nome do ficheiro e, se não houver, pelo próprio texto, distinguindo pt-PT de pt-BR.
+- **OpenSubtitles:** a pesquisa é feita pelo hash do vídeo, depois pelo IMDb/TMDb e por fim pelo título e ano. Respeita os limites diários do serviço.
+- **Tradução local:** com o Argos Translate, bloco a bloco. Timestamps e numeração nunca mudam. Se for interrompida, continua onde parou.
+- **pt-BR → pt-PT:** adaptação automática de vocabulário ("celular" → "telemóvel", "ônibus" → "autocarro"…) e do gerúndio ("está falando" → "está a falar"). Não precisa de internet.
+- A legenda original nunca é substituída: o resultado vai sempre para um ficheiro novo.
+
+### Capas, NFO e metadata.json
+
+- Poster do TMDb (de preferência em português, boa resolução), guardado como `cover.jpg`.
+- Para evitar homónimos, o ano tem de coincidir.
+- O NFO é compatível com Jellyfin e Kodi: título, título original, ano, sinopse, géneros, realizador, elenco, IMDb, TMDb e dados técnicos.
+- O `metadata.json` aceita campos extra: os que já lá estiverem são mantidos.
+- Capas e ficheiros existentes são preservados. Com **Substituir**, os antigos vão primeiro para a quarentena.
+
+### Música
+
+- Fica em `Biblioteca/Artista/Álbum (Ano)/01 - Faixa.flac`. Nos álbuns com vários discos fica `1-01 - Faixa`.
+- Por defeito **copia** da pasta de origem e valida a cópia por SHA256. O original fica intacto. A qualidade nunca é alterada.
+- Cada álbum recebe `cover.jpg`, a partir da imagem da pasta ou da capa embutida.
+- Faixas sem tags são deduzidas do nome e da pasta e ficam por confirmar. As correcções vão para as tags da cópia.
+- Duplicados exactos não são copiados duas vezes. Versões diferentes (outro formato ou bitrate) são preservadas.
+
+### Duplicados
+
+- **Exactos:** mesmo tamanho e mesmo SHA256 (filmes, música, legendas, capas, auxiliares).
+- **Prováveis:** mesmo filme (título e ano), ou mesma faixa (artista, título e duração ±3 s).
+- **Versões diferentes** (ao vivo, remix, remaster, 720p/1080p…) são assinaladas para preservar.
+- Mostra o espaço potencialmente libertável e uma recomendação para cada grupo.
+- **Nunca apaga.** Os ficheiros marcados vão para `Quarentena/Duplicados`.
+
+### Automatização
+
+| Modo | O que faz |
 |---|---|
-| Interface com dashboard e menu lateral (tema escuro) | ✅ |
-| Assistente inicial e configuração de pastas | ✅ |
-| Inventário de filmes: título e ano prováveis, resolução, codecs, duração, idiomas, legendas, capa, NFO | ✅ |
-| Inventário de música: artista, álbum, faixa, disco, ano, género, formato, bitrate, amostragem, capa | ✅ |
-| Análise incremental (não reanalisa ficheiros que não mudaram) | ✅ |
-| Ficheiros de 0 bytes: assinalados, preservados, sem FFprobe | ✅ |
-| Ficheiros inválidos e ficheiros em falta | ✅ |
-| Sistema de operações `OP_AAAAMMDD_NNN` com registo em base de dados e `logs/operations.jsonl` | ✅ |
-| Quarentena com manifesto JSON e reposição a partir do Histórico | ✅ |
-| Relatórios HTML, CSV, JSON e TXT | ✅ |
-| Diagnóstico de ferramentas (FFprobe, Mutagen, Beets, Czkawka, Argos…) | ✅ |
-| Legendas, tradução, capas, renomeação, duplicados, automatização | Fases seguintes |
+| Análise | inventário, propostas e relatórios; não altera nada |
+| Automático | aplica só o que é seguro (confiança alta), adapta pt-BR → pt-PT, procura legendas, cria NFO, JSON e capas, organiza a música, actualiza o Jellyfin |
+| Reparação | completa NFO, JSON e capas em falta, converte legendas, reanalisa ficheiros inválidos |
+| Recuperação | marca tarefas interrompidas, põe cópias parciais na quarentena, retoma traduções |
 
-## Regras de segurança
+- **Agendamento diário:** Agendador de Tarefas do Windows ou cron no Ubuntu. O computador tem de estar ligado à hora marcada.
+- **Linha de comandos:** `app.py --auto --mode automatico`.
 
-- A **análise só lê**: nunca altera, move ou apaga ficheiros.
-- **Eliminação automática: sempre desactivada**. Não há nenhuma função que apague ficheiros.
-- Mover só acontece por ordem do utilizador e passa por verificações: origem existe, destino livre (nunca sobrescreve), permissões e registo.
-- Entre discos diferentes: cópia, depois validação SHA256, e o original é **mantido** (a não ser que active a opção na Configuração).
-- **Quarentena não é eliminação**: guarda nome e local originais, data, motivo e identificador da operação, e pode ser revertida.
-- Tarefas interrompidas (por exemplo, se o computador se desligar) ficam marcadas como interrompidas no arranque seguinte.
+### Segurança
+
+- A **análise só lê**. A **eliminação automática está sempre desactivada**.
+- Cada operação tem um identificador `OP_AAAAMMDD_NNN` e fica registada na base de dados e em `logs/operations.jsonl`.
+- Antes de mover: verifica a origem e o destino (nunca sobrescreve) e as permissões. Entre discos, copia e valida por SHA256.
+- **A quarentena não é eliminação.** Cada ficheiro tem um manifesto JSON (nome e local originais, data, motivo, operação) e pode ser reposto no **Histórico**.
+- Backups automáticos da base de dados em `backups/` (os últimos 10).
+- Ficheiros de 0 bytes: assinalados e preservados, sem tentativas de processamento.
+
+### Relatórios
+
+Em HTML, CSV, JSON e TXT: filmes, música, erros, operações, duplicados, legendas e ficheiros em falta. Os HTML podem ser guardados em PDF pela opção Imprimir do navegador.
+
+---
 
 ## Estrutura
 
 ```
-app.py                 arranque
-core/                  base de dados, inventário, segurança, operações, registos, relatórios, diagnóstico
-movies/                identificação de filmes (título/ano)
-music/                 leitura de tags
-integrations/          (TMDb, OpenSubtitles, MusicBrainz, Beets, Jellyfin — fases seguintes)
-interface/             janelas PySide6
-tests/                 testes do núcleo
+app.py            arranque (interface ou --auto)
+core/             base de dados, inventário, segurança, operações, organizador,
+                  duplicados, automatização, agendamento, backups, relatórios
+movies/           identificação, legendas, tradução, capas, NFO, metadados
+music/            tags, organização da música
+integrations/     TMDb, OpenSubtitles, MusicBrainz, Jellyfin
+interface/        janelas (PySide6)
+tests/            testes automáticos
 database/ logs/ reports/ backups/ quarantine/   dados locais (fora do Git)
 ```
 
 ## Testes
 
 ```bash
-cd ~/MediaOrganizer && .venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -m unittest discover -s tests -v        # Ubuntu
+.venv\Scripts\python -m unittest discover -s tests -v     # Windows
 ```
 
-## Plano
+## Limitações conhecidas
 
-1. ✅ Fundação: interface, base de dados, configurações, registos, segurança, diagnóstico
-2. ✅ Inventário de filmes e música (pesquisa e filtros)
-3. ✅ Organização e renomeação de filmes (`Título (Ano)/`)
-4. Legendas: pesquisa, associação, idioma, conversão, validação
-5. Tradução local para Português de Portugal
-6. Capas, NFO e metadata.json
-7. Música: tags, álbuns, capas, Beets, MusicBrainz
-8. Duplicados e espaço recuperável
-9. Automatização e tarefas agendadas
-10. Integração Jellyfin
-11. Testes com bibliotecas reais
-12. Empacotamento e versão estável
+- A tradução automática (Argos) é boa para perceber o filme, mas não iguala uma legenda feita por pessoas. Por isso, a ordem de prioridade é sempre: legenda pt-PT humana, depois pt-BR adaptada, e só por fim tradução automática.
+- As legendas em imagem (VobSub `.sub/.idx`, PGS `.sup`) não são convertidas. Seria preciso OCR, que não está incluído.
+- A escrita de tags na música precisa do Mutagen, que o instalador inclui.
+- A IA local (Ollama) não está integrada nesta versão.
 
 Licença: MIT.

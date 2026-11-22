@@ -23,6 +23,12 @@ REPORTS = {
     "operacoes": ("Operações", "SELECT operation_id, operation AS tipo, original_path AS origem, "
                   "new_path AS destino, timestamp AS data, status AS estado, result AS resultado, "
                   "error AS erro FROM operations WHERE operation!='reserved' ORDER BY id DESC"),
+    "duplicados": ("Duplicados", "SELECT d.group_id AS grupo, d.method AS tipo, d.media_type AS categoria, "
+                   "d.confidence AS recomendacao, d.path AS caminho, d.sha256 FROM duplicates d "
+                   "ORDER BY d.group_id, d.confidence DESC"),
+    "legendas": ("Legendas", "SELECT m.title_guess AS filme, m.year_guess AS ano, s.language AS idioma, "
+                 "s.format AS formato, s.source AS origem, s.path AS caminho FROM subtitles s "
+                 "JOIN movies m ON m.id = s.movie_id ORDER BY m.title_guess"),
     "em_falta": ("Ficheiros em falta", "SELECT 'filme' AS tipo, path AS caminho, scanned_at AS "
                  "visto_em FROM movies WHERE status='missing' UNION ALL SELECT 'música', path, "
                  "scanned_at FROM music WHERE status='missing'"),

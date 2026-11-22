@@ -80,10 +80,10 @@ class DashboardView(QWidget):
         A, W, D, B, M = theme.ACCENT, theme.WARN, theme.DANGER, theme.ACCENT_2, theme.MUTED
         section("Filmes", [
             ("m_total", "Filmes no inventário", "▶", A, "movies", "all"),
-            ("m_subs", "Sem legendas", "✎", W, "movies", "no_subs"),
-            ("m_cover", "Sem capa", "▢", W, "movies", "no_cover"),
-            ("m_meta", "Metadados incompletos", "☰", W, "movies", "no_metadata"),
-            ("m_uncertain", "Identificação incerta", "?", W, "movies", "uncertain"),
+            ("m_subs", "Sem legendas", "✎", W, "subtitles", ""),
+            ("m_cover", "Sem capa", "▢", W, "covers", ""),
+            ("m_meta", "Metadados incompletos", "☰", W, "covers", ""),
+            ("m_uncertain", "Identificação incerta", "?", W, "analysis", ""),
             ("m_zero", "Ficheiros de 0 bytes", "∅", D, "movies", "zero_bytes"),
             ("m_invalid", "Inválidos / incompletos", "✕", D, "movies", "invalid"),
             ("m_missing", "Ficheiros em falta", "⌕", M, "movies", "missing"),
@@ -168,7 +168,7 @@ class DashboardView(QWidget):
         c = self.cards
         c["m_total"].set(fmt_int(m["total"]), human_size(m["size"]))
         c["m_subs"].set(fmt_int(m["no_subs"]), "sem ficheiro nem pista de legenda", m["no_subs"] > 0)
-        c["m_cover"].set(fmt_int(m["no_cover"]), "capa a obter (Fase 6)", m["no_cover"] > 0)
+        c["m_cover"].set(fmt_int(m["no_cover"]), "obter na página Capas", m["no_cover"] > 0)
         c["m_meta"].set(fmt_int(m["no_metadata"]), "sem NFO ou metadata.json", m["no_metadata"] > 0)
         c["m_uncertain"].set(fmt_int(m["uncertain"]), "nome sem ano identificável", m["uncertain"] > 0)
         c["m_zero"].set(fmt_int(m["zero_bytes"]), "preservados, não processados", m["zero_bytes"] > 0)
@@ -185,13 +185,20 @@ class DashboardView(QWidget):
         c["s_errors"].set(fmt_int(g["errors"]), "abrir histórico de erros", g["errors"] > 0)
         c["s_ops"].set(fmt_int(g["operations"]), "todas reversíveis quando possível")
         c["s_quar"].set(fmt_int(g["quarantined"]), "quarentena não é eliminação")
-        c["s_space"].set("—", "disponível com a análise de duplicados (Fase 8)")
+        dup = db.get_setting("last_duplicates") or {}
+        if dup:
+            c["s_space"].set(human_size(dup.get("space_exact")),
+                             f"{dup.get('exact', 0)} duplicados exactos · análise de "
+                             f"{(dup.get('date') or '')[:10]}", bool(dup.get("space_exact")))
+        else:
+            c["s_space"].set("—", "faça a análise na página Duplicados")
 
         self.recent.clear()
         items = []
         for j in db.query("SELECT * FROM jobs ORDER BY id DESC LIMIT 6"):
             name = {"inventario_filmes": "Inventário de filmes",
-                    "inventario_musica": "Inventário de música"}.get(j["job_type"], j["job_type"])
+                    "inventario_musica": "Inventário de música"}.get(
+                j["job_type"], (j["job_type"] or "").replace("automatizacao_", "Automatização: "))
             items.append((j["started_at"] or "", f"{name} — {j['status']} · {j['message'] or ''}"))
         for o in db.query("SELECT * FROM operations WHERE operation!='reserved' "
                           "ORDER BY id DESC LIMIT 6"):

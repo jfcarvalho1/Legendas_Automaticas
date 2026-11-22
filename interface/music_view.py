@@ -51,6 +51,13 @@ class MusicView(MediaView):
     order_by = ("COALESCE(album_artist, artist) COLLATE NOCASE, album COLLATE NOCASE, "
                 "disc, track, filename")
 
+    def __init__(self, ctx, parent=None):
+        super().__init__(ctx, parent)
+        from PySide6.QtWidgets import QPushButton
+        b = QPushButton("Organizar música…")
+        b.clicked.connect(lambda: self.ctx.navigate.emit("analysis", "music"))
+        self.header_actions.insertWidget(0, b)
+
     def detail_html(self, r: dict) -> str:
         e = lambda v: html.escape(str(v)) if v not in (None, "") else "<span style='color:#8b98a5'>—</span>"  # noqa: E731
         rows = [

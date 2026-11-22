@@ -13,9 +13,12 @@ from .context import AppContext
 from .dashboard import DashboardView
 from .history_view import HistoryView
 from .movies_view import MoviesView
+from .automation_view import AutomationView
+from .covers_view import CoversView
+from .duplicates_view import DuplicatesView
+from .music_organize_view import OrganizeHub
 from .music_view import MusicView
-from .organize_view import OrganizeView
-from .placeholder_view import PlaceholderView
+from .subtitles_view import SubtitlesView
 from .settings_view import FolderField, SettingsView
 
 NAV = [
@@ -67,11 +70,11 @@ class MainWindow(QMainWindow):
             "dashboard": DashboardView(ctx),
             "movies": MoviesView(ctx),
             "music": MusicView(ctx),
-            "subtitles": PlaceholderView(ctx, "subtitles"),
-            "covers": PlaceholderView(ctx, "covers"),
-            "analysis": OrganizeView(ctx),
-            "duplicates": PlaceholderView(ctx, "duplicates"),
-            "automation": PlaceholderView(ctx, "automation"),
+            "subtitles": SubtitlesView(ctx),
+            "covers": CoversView(ctx),
+            "analysis": OrganizeHub(ctx),
+            "duplicates": DuplicatesView(ctx),
+            "automation": AutomationView(ctx),
             "history": HistoryView(ctx),
             "settings": SettingsView(ctx),
         }
@@ -116,7 +119,7 @@ class MainWindow(QMainWindow):
         p = self.pages[page]
         if flt and hasattr(p, "set_filter"):
             p.set_filter(flt)
-        if flt and hasattr(p, "show_tab"):
+        if hasattr(p, "show_tab"):
             p.show_tab(flt)
         self.show_page(page)
 

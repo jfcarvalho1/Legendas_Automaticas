@@ -25,12 +25,41 @@ def recover_interrupted(db: Database) -> None:
                    "WHERE operation_id=?", (r["operation_id"],))
 
 
+def run_headless(argv: list[str]) -> int:
+    """app.py --auto [--mode analise|automatico|reparacao|recuperacao] — usado pelo agendamento."""
+    from core.automation import MODES, Automation, Busy
+    mode = "automatico"
+    if "--mode" in argv:
+        i = argv.index("--mode")
+        if i + 1 < len(argv):
+            mode = argv[i + 1]
+    if mode not in MODES:
+        print(f"Modo inválido: {mode}. Use: {', '.join(MODES)}")
+        return 2
+    db = Database()
+    recover_interrupted(db)
+    try:
+        Automation(db, log_fn=lambda m: setup_logging().info(m)).run(mode)
+    except Busy as e:
+        setup_logging().warning(str(e))
+        return 1
+    return 0
+
+
 def main() -> int:
     ensure_dirs()
     log = setup_logging()
     log.info("A iniciar %s %s", APP_NAME, APP_VERSION)
+    if "--auto" in sys.argv:
+        return run_headless(sys.argv)
     db = Database()
     recover_interrupted(db)
+    if db.get_setting("backups_enabled"):
+        try:
+            from core.backup import backup_database
+            backup_database(db.path)
+        except Exception as e:  # noqa: BLE001
+            log.warning("Backup falhou: %s", e)
 
     try:
         from PySide6.QtWidgets import QApplication

@@ -71,6 +71,24 @@ class TMDbClient:
                                            "language": self.language, "include_adult": "false"})
         return data.get("results") or []
 
+    def details(self, tmdb_id: int, language: str | None = None) -> dict:
+        """Ficha completa do filme, com IDs externos (IMDb) e lista de imagens."""
+        return self._get(f"/movie/{tmdb_id}", {
+            "language": language or self.language,
+            "append_to_response": "external_ids,images,credits",
+            "include_image_language": "pt,en,null"})
+
+    def image(self, file_path: str, size: str = "original") -> bytes:
+        url = f"https://image.tmdb.org/t/p/{size}{file_path}"
+        if self._fetch is not self._http:
+            return self._fetch(url, {"image": "1"})
+        req = urllib.request.Request(url, headers={"User-Agent": "MediaOrganizer"})
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout * 3) as r:
+                return r.read()
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            raise TMDbError(f"Não foi possível descarregar a imagem: {e}") from e
+
     def test(self) -> None:
         self._get("/configuration", {})
 

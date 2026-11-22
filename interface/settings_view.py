@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
-from PySide6.QtWidgets import (QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
                                QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton,
                                QScrollArea, QSpinBox, QTableWidget, QTableWidgetItem,
                                QVBoxLayout, QWidget)
@@ -59,7 +59,7 @@ class SettingsView(QWidget):
     FOLDERS = [
         ("movies_folder", "Pasta de filmes"),
         ("music_source_folder", "Música — pasta de origem"),
-        ("music_library_folder", "Música — biblioteca organizada (destino, Fase 7)"),
+        ("music_library_folder", "Música — biblioteca organizada (destino)"),
         ("quarantine_folder", "Pasta de quarentena"),
     ]
     TOGGLES = [
@@ -128,8 +128,8 @@ class SettingsView(QWidget):
         fl.addLayout(row)
         lay.addWidget(f)
 
-        f, fl = panel("Jellyfin (opcional)", "Compatibilidade de nomes, posters e NFO. "
-                                             "A integração completa chega na Fase 10.")
+        f, fl = panel("Jellyfin (opcional)", "Convenções de nomes, posters e NFO. O endereço do "
+                                             "servidor configura-se na página Automatização.")
         self.jf_enabled = QCheckBox("Usar convenções Jellyfin")
         fl.addWidget(self.jf_enabled)
         row = QHBoxLayout()
@@ -159,6 +159,40 @@ class SettingsView(QWidget):
         b_test = QPushButton("Testar")
         b_test.clicked.connect(self._test_tmdb)
         row.addWidget(b_test)
+        fl.addLayout(row)
+        lay.addWidget(f)
+
+        f, fl = panel("OpenSubtitles (opcional)",
+                      "Para procurar legendas online: conta gratuita em opensubtitles.com e chave de API em "
+                      "opensubtitles.com/consumers. As contas gratuitas têm limite diário de descargas.")
+        grid2 = QGridLayout()
+        self.os_key, self.os_user, self.os_pass = QLineEdit(), QLineEdit(), QLineEdit()
+        self.os_key.setEchoMode(QLineEdit.Password)
+        self.os_pass.setEchoMode(QLineEdit.Password)
+        for i, (label, w) in enumerate((("Chave de API", self.os_key), ("Utilizador", self.os_user),
+                                        ("Palavra-passe", self.os_pass))):
+            grid2.addWidget(QLabel(label), i, 0)
+            grid2.addWidget(w, i, 1)
+        self.os_max = QSpinBox()
+        self.os_max.setRange(1, 200)
+        grid2.addWidget(QLabel("Máximo de descargas por execução automática"), 3, 0)
+        grid2.addWidget(self.os_max, 3, 1)
+        self.tr_max = QSpinBox()
+        self.tr_max.setRange(1, 500)
+        grid2.addWidget(QLabel("Máximo de traduções por execução automática"), 4, 0)
+        grid2.addWidget(self.tr_max, 4, 1)
+        grid2.setColumnStretch(1, 1)
+        fl.addLayout(grid2)
+        lay.addWidget(f)
+
+        f, fl = panel("Música", "Copiar mantém sempre o original na pasta de origem (recomendado).")
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Ao organizar"))
+        self.music_mode = QComboBox()
+        self.music_mode.addItem("Copiar para a biblioteca (original intacto)", "copy")
+        self.music_mode.addItem("Mover para a biblioteca", "move")
+        row.addWidget(self.music_mode)
+        row.addStretch(1)
         fl.addLayout(row)
         lay.addWidget(f)
 
@@ -196,6 +230,12 @@ class SettingsView(QWidget):
         self.jf_cover.setText(s.get("jellyfin_cover_name") or "cover.jpg")
         self.tmdb_key.setText(s.get("tmdb_api_key") or "")
         self.tmdb_lang.setText(s.get("tmdb_language") or "en-US")
+        self.os_key.setText(s.get("opensubtitles_api_key") or "")
+        self.os_user.setText(s.get("opensubtitles_username") or "")
+        self.os_pass.setText(s.get("opensubtitles_password") or "")
+        self.os_max.setValue(int(s.get("opensubtitles_max_per_run") or 10))
+        self.tr_max.setValue(int(s.get("translate_max_per_run") or 5))
+        self.music_mode.setCurrentIndex(max(0, self.music_mode.findData(s.get("music_mode") or "copy")))
 
     def save(self):
         db = self.ctx.db
@@ -208,6 +248,12 @@ class SettingsView(QWidget):
         db.set_setting("jellyfin_cover_name", self.jf_cover.text().strip() or "cover.jpg")
         db.set_setting("tmdb_api_key", self.tmdb_key.text().strip())
         db.set_setting("tmdb_language", self.tmdb_lang.text().strip() or "en-US")
+        db.set_setting("opensubtitles_api_key", self.os_key.text().strip())
+        db.set_setting("opensubtitles_username", self.os_user.text().strip())
+        db.set_setting("opensubtitles_password", self.os_pass.text())
+        db.set_setting("opensubtitles_max_per_run", self.os_max.value())
+        db.set_setting("translate_max_per_run", self.tr_max.value())
+        db.set_setting("music_mode", self.music_mode.currentData())
         self.load()
         self.ctx.data_changed.emit()
         QMessageBox.information(self, "Configuração", "Configuração guardada.")

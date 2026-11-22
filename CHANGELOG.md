@@ -1,5 +1,23 @@
 # Alterações
 
+## 1.0.0 — 2026-11-22 — versão estável
+- **Legendas**: inventário por filme (incl. subpastas Subs/), detecção de idioma pelo nome e pelo
+  texto (pt-PT/pt-BR), conversão ASS/SSA/VTT/SUB → SRT UTF-8, validação, OpenSubtitles (hash do
+  vídeo, IMDb/TMDb, título) com prioridade pt-PT > pt-BR > en.
+- **Tradução local** (Argos Translate) para pt-PT, bloco a bloco com retoma, timestamps preservados;
+  adaptação pt-BR → pt-PT (vocabulário e gerúndio) sem internet; instalação do motor com um botão.
+- **Capas, NFO e metadata.json** com TMDb (poster em português, verificação do ano contra homónimos);
+  NFO Jellyfin/Kodi; campos extra do JSON preservados; substituição só com quarentena.
+- **Música**: Artista/Álbum (Ano)/NN - Faixa, cópia validada (original intacto), capas por álbum,
+  dedução do nome/pasta para faixas sem tags, correcção de tags na cópia, MusicBrainz opcional.
+- **Duplicados**: exactos por SHA256 (com cache), prováveis por título/ano e artista/título/duração,
+  versões diferentes assinaladas, espaço libertável, envio para quarentena.
+- **Automatização**: modos Análise/Automático/Reparação/Recuperação, agendamento diário (Windows e
+  Ubuntu), execução sem janela `app.py --auto`, bloqueio contra execuções simultâneas.
+- **Jellyfin**: teste de ligação, actualização da biblioteca, verificação de compatibilidade.
+- Backups automáticos da base de dados; operações de criação/cópia reversíveis; relatórios de
+  duplicados e legendas.
+
 ## 0.2.0 — 2026-11-22
 - Página **Organizar**: propostas «Título (Ano)/Título (Ano).ext», revisão, correcção manual,
   aplicação em lote e reversão do lote inteiro.
