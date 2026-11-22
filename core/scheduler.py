@@ -26,7 +26,11 @@ def command(mode: str) -> list[str]:
 
 
 def _run(cmd: list[str], inp: str | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, input=inp, creationflags=NO_WINDOW)
+    # As ferramentas da consola do Windows (schtasks) respondem na codificação OEM
+    # (cp850 em português: «não», «Próxima»…). Nunca falhar por causa de acentos.
+    enc = "oem" if sys.platform.startswith("win") else "utf-8"
+    return subprocess.run(cmd, capture_output=True, text=True, input=inp, encoding=enc,
+                          errors="replace", creationflags=NO_WINDOW)
 
 
 def install(hour: int, minute: int, mode: str) -> str:
@@ -72,5 +76,5 @@ def status() -> str | None:
             return None
         m, h = ln.split()[:2]
         return f"todos os dias às {int(h):02d}:{int(m):02d}"
-    except OSError:
+    except Exception:  # noqa: BLE001 — o estado do agendamento nunca pode impedir o arranque
         return None

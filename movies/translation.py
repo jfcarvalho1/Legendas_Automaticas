@@ -151,7 +151,7 @@ def install_argos(progress: Callable[[str], None] = print, sources=("en", "es", 
     """Instala o Argos Translate e os modelos X→pt (descarga grande, uma só vez)."""
     progress("A instalar o Argos Translate (pode demorar vários minutos)…")
     r = subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "argostranslate"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         raise TranslationError("Falhou a instalação do Argos Translate:\n" + (r.stderr or "")[-800:])
     import importlib

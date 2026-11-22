@@ -141,7 +141,10 @@ class AutomationView(TaskPage):
 
     # ---------------------------------------------------------- agendamento
     def _sched_refresh(self):
-        st = scheduler.status()
+        try:
+            st = scheduler.status()
+        except Exception:  # noqa: BLE001
+            st = None
         self.sched_status.setText(f"Agendado: {st}." if st else "Sem agendamento activo.")
 
     def _schedule(self):

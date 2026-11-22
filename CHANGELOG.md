@@ -1,5 +1,10 @@
 # Alterações
 
+## 1.0.1 — 2026-11-22
+- Corrigido: no Windows em português a aplicação fechava ao arrancar (resposta do Agendador de
+  Tarefas com acentos na codificação OEM). As respostas da consola são agora lidas na codificação
+  certa e nunca impedem o arranque.
+
 ## 1.0.0 — 2026-11-22 — versão estável
 - **Legendas**: inventário por filme (incl. subpastas Subs/), detecção de idioma pelo nome e pelo
   texto (pt-PT/pt-BR), conversão ASS/SSA/VTT/SUB → SRT UTF-8, validação, OpenSubtitles (hash do
