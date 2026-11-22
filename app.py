@@ -42,6 +42,14 @@ def main() -> int:
     from interface.main_window import FirstRunDialog, MainWindow
     from interface.theme import STYLE
 
+    if sys.platform.startswith("win"):
+        # ícone próprio na barra de tarefas do Windows
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("MediaOrganizer.App")
+        except Exception:  # noqa: BLE001
+            pass
+
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)

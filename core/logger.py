@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 
 from .config import LOGS_DIR
@@ -19,11 +20,12 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
     fh = RotatingFileHandler(LOGS_DIR / "mediaorganizer.log", maxBytes=2_000_000,
                              backupCount=5, encoding="utf-8")
     fh.setFormatter(fmt)
-    sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
     logger.setLevel(level)
     logger.addHandler(fh)
-    logger.addHandler(sh)
+    if sys.stderr is not None:  # com pythonw (Windows) não há consola
+        sh = logging.StreamHandler()
+        sh.setFormatter(fmt)
+        logger.addHandler(sh)
     _configured = True
     return logger
 

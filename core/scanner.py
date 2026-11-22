@@ -24,7 +24,8 @@ log = get_logger("scanner")
 
 ProgressFn = Callable[[int, int, str], None]
 
-IGNORED_DIRS = {".git", ".Trash", ".trash", "@eaDir", "lost+found", ".thumbnails"}
+IGNORED_DIRS = {".git", ".Trash", ".trash", "@eaDir", "lost+found", ".thumbnails",
+                "$RECYCLE.BIN", "System Volume Information"}
 
 
 def _walk(root: Path, extensions: set[str], skip: set[Path]) -> list[Path]:
@@ -67,11 +68,9 @@ class Scanner:
             (now_iso(), status, total, processed, msg, job_id))
 
     def _known(self, table: str, folder: Path) -> dict[str, dict]:
-        prefix = str(folder).rstrip("/") + "/"
-        rows = self.db.query(
-            f"SELECT path, size, mtime, status FROM {table} WHERE path LIKE ? ESCAPE '\\'",
-            (prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%",))
-        return {r["path"]: r for r in rows}
+        prefix = os.path.join(str(folder), "")
+        rows = self.db.query(f"SELECT path, size, mtime, status FROM {table}")
+        return {r["path"]: r for r in rows if r["path"].startswith(prefix)}
 
     def _mark_missing(self, table: str, known: dict, seen: set[str]) -> int:
         n = 0

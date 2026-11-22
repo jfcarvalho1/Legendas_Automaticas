@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.ctx = ctx
         self.setWindowTitle(f"{APP_NAME} {APP_VERSION}")
-        icon = ASSETS_DIR / "icon.svg"
+        icon = ASSETS_DIR / "icon.png"
         if icon.exists():
             self.setWindowIcon(QIcon(str(icon)))
         self.resize(1360, 860)

@@ -1,5 +1,11 @@
 # Alterações
 
+## 0.1.1 — 2026-11-22
+- Compatibilidade com Windows: instalador de duplo clique (`instalar.bat`), atalhos no
+  Ambiente de Trabalho e Menu Iniciar, ícone `.ico`, detecção do FFmpeg instalado pelo winget,
+  sem janelas de consola ao correr o FFprobe, caminhos com `\`, abrir pastas no Explorador.
+- `arrancar_com_consola.bat` para diagnosticar problemas de arranque.
+
 ## 0.1.0 — 2026-11-22
 Primeira versão: fundação da aplicação.
 - Interface PySide6 com tema escuro, menu lateral e dashboard com indicadores clicáveis.

@@ -1,7 +1,9 @@
 """Componentes reutilizáveis: cabeçalhos, cartões, modelo de tabela, utilitários."""
 from __future__ import annotations
 
+import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Callable
 
@@ -40,7 +42,12 @@ def open_in_file_manager(path: str | Path) -> None:
     p = Path(path)
     target = p if p.is_dir() else p.parent
     try:
-        subprocess.Popen(["xdg-open", str(target)])
+        if sys.platform.startswith("win"):
+            os.startfile(str(target))  # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", str(target)])
+        else:
+            subprocess.Popen(["xdg-open", str(target)])
     except OSError:
         pass
 

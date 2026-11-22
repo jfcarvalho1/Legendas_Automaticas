@@ -5,6 +5,19 @@ Aplicação desktop local, gratuita e open source, para Ubuntu, que gere uma bib
 > Versão actual: **0.1.0**, a fundação (Fase 1 + inventário da Fase 2).
 > A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
 
+## Instalar no Windows
+
+1. Nesta página do GitHub, carregue no botão verde **Code** → **Download ZIP**.
+2. Extraia o ZIP para uma pasta à sua escolha, por exemplo `Documentos\MediaOrganizer`.
+3. Abra essa pasta e faça **duplo clique em `instalar.bat`**.
+   Se o Windows mostrar "O Windows protegeu o seu PC", carregue em **Mais informações** → **Executar mesmo assim**.
+4. No fim aparece o atalho **Media Organizer** no Ambiente de Trabalho e no Menu Iniciar.
+
+O instalador trata de tudo: instala o Python 3.12 e o FFmpeg pelo `winget` se faltarem, cria o ambiente próprio da aplicação e os atalhos.
+Se a aplicação não abrir, faça duplo clique em `arrancar_com_consola.bat` para ver a mensagem de erro.
+
+Pasta de filmes sugerida no Windows: `C:\Users\<utilizador>\Videos\Filmes` (pode ser alterada na Configuração).
+
 ## Instalar (Ubuntu)
 
 Abra um terminal e cole:

@@ -1,18 +1,44 @@
 """Leitura técnica de ficheiros através do FFprobe (só leitura)."""
 from __future__ import annotations
 
+import glob
 import json
+import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
+NO_WINDOW = 0x08000000 if sys.platform.startswith("win") else 0  # CREATE_NO_WINDOW
+
+
+def run_quiet(cmd: list[str], timeout: int) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace", timeout=timeout, creationflags=NO_WINDOW)
 
 
 class ProbeError(Exception):
     pass
 
 
+def find_tool(name: str) -> str | None:
+    """Procura no PATH e, no Windows, nos locais onde o winget instala o FFmpeg."""
+    p = shutil.which(name)
+    if p or not sys.platform.startswith("win"):
+        return p
+    local = os.environ.get("LOCALAPPDATA", "")
+    candidates = [os.path.join(local, "Microsoft", "WinGet", "Links", f"{name}.exe")]
+    candidates += glob.glob(os.path.join(local, "Microsoft", "WinGet", "Packages",
+                                         "*FFmpeg*", "**", "bin", f"{name}.exe"), recursive=True)
+    candidates += [rf"C:\ffmpeg\bin\{name}.exe"]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return None
+
+
 def ffprobe_path() -> str | None:
-    return shutil.which("ffprobe")
+    return find_tool("ffprobe")
 
 
 def probe(path: Path | str, timeout: int = 30) -> dict:
@@ -22,7 +48,7 @@ def probe(path: Path | str, timeout: int = 30) -> dict:
     cmd = [exe, "-v", "error", "-print_format", "json", "-show_format", "-show_streams",
            str(path)]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        r = run_quiet(cmd, timeout)
     except subprocess.TimeoutExpired as e:
         raise ProbeError(f"FFprobe excedeu {timeout}s.") from e
     if r.returncode != 0:

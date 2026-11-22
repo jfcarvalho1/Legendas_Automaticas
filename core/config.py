@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
+IS_WINDOWS = sys.platform.startswith("win")
+
 APP_NAME = "Media Organizer"
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 
 # Raiz do projecto (pasta onde está o app.py). Pode ser alterada com a
 # variável de ambiente MEDIAORGANIZER_HOME (útil para testes).
@@ -29,7 +32,7 @@ def ensure_dirs() -> None:
 
 DEFAULT_SETTINGS: dict = {
     # Pastas
-    "movies_folder": str(Path.home() / "Vídeos" / "Filmes"),
+    "movies_folder": str(Path.home() / ("Videos" if IS_WINDOWS else "Vídeos") / "Filmes"),
     "music_source_folder": "",
     "music_library_folder": "",
     "quarantine_folder": str(QUARANTINE_DIR),
