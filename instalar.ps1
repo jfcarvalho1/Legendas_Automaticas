@@ -90,7 +90,7 @@ Titulo "3/6 Componentes da aplicação"
 $VPy = "$Dir\.venv\Scripts\python.exe"
 $cur = Get-PyVersion $VPy
 if ($cur -and $cur -ne $PyVer) {
-    Aviso "Ambiente antigo com Python $cur: a refazer com Python $PyVer..."
+    Aviso "Ambiente antigo com Python ${cur}: a refazer com Python ${PyVer}..."
     Remove-Item -Recurse -Force "$Dir\.venv" -ErrorAction SilentlyContinue
 }
 if (-not (Test-Path $VPy)) { & $Python -m venv "$Dir\.venv" }
