@@ -1,5 +1,12 @@
 # Alterações
 
+## 1.0.2 — 2026-11-22
+- Instalador do Windows completo, de início ao fim: Python 3.12 (compatível com todos os
+  componentes), FFmpeg, PySide6/Mutagen, motor de tradução local com os modelos
+  inglês/espanhol/francês → português, atalhos, verificação final (`app.py --check`) e abertura
+  automática do programa. Fecha o programa se estiver aberto e refaz o ambiente se a versão do
+  Python mudar. Registo em `logs/instalacao.log`.
+
 ## 1.0.1 — 2026-11-22
 - Corrigido: no Windows em português a aplicação fechava ao arrancar (resposta do Agendador de
   Tarefas com acentos na codificação OEM). As respostas da consola são agora lidas na codificação

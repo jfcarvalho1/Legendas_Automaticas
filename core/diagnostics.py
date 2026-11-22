@@ -61,13 +61,13 @@ def run_diagnostics() -> list[ToolStatus]:
                           "Leitura de tags musicais", "instalar.bat" if WIN else "bash instalar.sh"))
     p = find_tool("beet")
     res.append(ToolStatus("Beets", p is not None,
-                          _cmd_version([p, "version"]) if p else "em falta (Fase 7)",
+                          _cmd_version([p, "version"]) if p else "opcional",
                           "Organização musical", "pip install beets" if WIN else "sudo apt install beets"))
     p = find_tool("czkawka_cli") or find_tool("czkawka_gui") or find_tool("czkawka")
-    res.append(ToolStatus("Czkawka", p is not None, "instalado" if p else "em falta (Fase 8)",
+    res.append(ToolStatus("Czkawka", p is not None, "instalado" if p else "opcional",
                           "Duplicados e ficheiros semelhantes", "github.com/qarmin/czkawka" if WIN else "flatpak install czkawka"))
     v = _module_version("argostranslate")
-    res.append(ToolStatus("Argos Translate", v is not None, v or "em falta (Fase 5)",
+    res.append(ToolStatus("Argos Translate", v is not None, v or "em falta (botão na página Legendas)",
                           "Tradução local de legendas", "pip install argostranslate"))
     p = find_tool("ollama")
     res.append(ToolStatus("Ollama", p is not None, "instalado" if p else "opcional",

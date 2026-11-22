@@ -46,10 +46,35 @@ def run_headless(argv: list[str]) -> int:
     return 0
 
 
+def run_check() -> int:
+    """app.py --check — usado no fim da instalação: confirma que tudo carrega."""
+    import importlib
+    ok = True
+    print(f"{APP_NAME} {APP_VERSION} — verificação")
+    for mod in ("PySide6.QtWidgets", "mutagen", "core.database", "core.scanner", "core.organizer",
+                "core.automation", "core.duplicates", "movies.subtitles", "movies.translation",
+                "movies.metadata", "music.organizer", "integrations.tmdb",
+                "integrations.opensubtitles", "interface.main_window"):
+        try:
+            importlib.import_module(mod)
+            print(f"  OK   {mod}")
+        except Exception as e:  # noqa: BLE001
+            ok = ok and not mod.startswith(("PySide6", "core", "interface", "movies", "music"))
+            print(f"  ERRO {mod}: {e}")
+    from core.diagnostics import run_diagnostics
+    for t in run_diagnostics():
+        print(f"  {'OK  ' if t.ok else '--  '} {t.name}: {t.version}")
+    Database()
+    print("RESULTADO: " + ("TUDO OK" if ok else "HÁ ERROS"))
+    return 0 if ok else 1
+
+
 def main() -> int:
     ensure_dirs()
     log = setup_logging()
     log.info("A iniciar %s %s", APP_NAME, APP_VERSION)
+    if "--check" in sys.argv:
+        return run_check()
     if "--auto" in sys.argv:
         return run_headless(sys.argv)
     db = Database()

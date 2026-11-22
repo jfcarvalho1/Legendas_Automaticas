@@ -10,7 +10,7 @@ Aplicação desktop local, gratuita e open source (Windows e Ubuntu) para gerir 
 
 **Os originais são sempre preservados**: nada é apagado, tudo fica registado e pode ser revertido.
 
-Versão: **1.0.0**. A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
+Versão: **1.0.2**. A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
 
 ---
 
@@ -23,7 +23,16 @@ Versão: **1.0.0**. A especificação completa está em [`docs/ESPECIFICACAO.txt
 3. Faça **duplo clique em `instalar.bat`**. Se o Windows mostrar "O Windows protegeu o seu PC", carregue em **Mais informações** → **Executar mesmo assim**.
 4. No fim aparece o atalho **Media Organizer** no Ambiente de Trabalho e no Menu Iniciar.
 
-O instalador instala o Python e o FFmpeg (pelo `winget`) se faltarem, e cria o ambiente da aplicação.
+O instalador faz tudo sozinho, do início ao fim (pode repeti-lo quando quiser):
+
+1. instala o **Python 3.12**, se faltar (é a versão compatível com todos os componentes);
+2. instala o **FFmpeg**;
+3. instala os componentes da aplicação (PySide6, Mutagen);
+4. instala o **motor de tradução local** com os modelos inglês, espanhol e francês → português (~1 GB, só da primeira vez);
+5. cria os atalhos no Ambiente de Trabalho e no Menu Iniciar;
+6. verifica que está tudo bem e **abre o programa**.
+
+O registo da instalação fica em `logs\instalacao.log`.
 Se a aplicação não abrir, faça duplo clique em `arrancar_com_consola.bat` para ver o erro.
 
 ### Ubuntu
@@ -60,7 +69,7 @@ Serviços opcionais (todos gratuitos; configurar em **Configuração**):
 |---|---|---|
 | TMDb | confirmar título/ano, capas, sinopse, NFO completo | themoviedb.org → Definições → API |
 | OpenSubtitles | procurar e descarregar legendas | conta em opensubtitles.com + chave em opensubtitles.com/consumers |
-| Argos Translate | traduzir legendas sem internet | botão **Instalar motor de tradução** na página Legendas (~1 GB) |
+| Argos Translate | traduzir legendas sem internet | já instalado pelo `instalar.bat` (ou botão na página Legendas) |
 | MusicBrainz | completar anos de álbuns | não precisa de conta |
 | Jellyfin | actualizar a biblioteca no fim | Painel do Jellyfin → Chaves de API (na página Automatização) |
 

@@ -8,7 +8,7 @@ from pathlib import Path
 IS_WINDOWS = sys.platform.startswith("win")
 
 APP_NAME = "Media Organizer"
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 
 # Raiz do projecto (pasta onde está o app.py). Pode ser alterada com a
 # variável de ambiente MEDIAORGANIZER_HOME (útil para testes).
