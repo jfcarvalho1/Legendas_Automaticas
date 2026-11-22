@@ -1,0 +1,203 @@
+"""Configuração: pastas, segurança, Jellyfin e diagnóstico."""
+from __future__ import annotations
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (QCheckBox, QFileDialog, QFrame, QGridLayout, QHBoxLayout,
+                               QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton,
+                               QScrollArea, QSpinBox, QTableWidget, QTableWidgetItem,
+                               QVBoxLayout, QWidget)
+
+from core.diagnostics import run_diagnostics
+
+from . import theme
+from .context import AppContext
+from .widgets import PageHeader
+
+
+def panel(title: str, subtitle: str = "") -> tuple[QFrame, QVBoxLayout]:
+    f = QFrame()
+    f.setObjectName("Panel")
+    lay = QVBoxLayout(f)
+    lay.setContentsMargins(20, 16, 20, 18)
+    lay.setSpacing(8)
+    t = QLabel(title)
+    t.setObjectName("SectionTitle")
+    lay.addWidget(t)
+    if subtitle:
+        s = QLabel(subtitle)
+        s.setObjectName("Muted")
+        s.setWordWrap(True)
+        lay.addWidget(s)
+    return f, lay
+
+
+class FolderField(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        self.edit = QLineEdit()
+        b = QPushButton("Escolher…")
+        b.clicked.connect(self._pick)
+        lay.addWidget(self.edit, 1)
+        lay.addWidget(b)
+
+    def _pick(self):
+        d = QFileDialog.getExistingDirectory(self, "Escolher pasta", self.edit.text() or "")
+        if d:
+            self.edit.setText(d)
+
+    def text(self) -> str:
+        return self.edit.text().strip()
+
+    def setText(self, t: str):  # noqa: N802
+        self.edit.setText(t or "")
+
+
+class SettingsView(QWidget):
+    FOLDERS = [
+        ("movies_folder", "Pasta de filmes"),
+        ("music_source_folder", "Música — pasta de origem"),
+        ("music_library_folder", "Música — biblioteca organizada (destino, Fase 7)"),
+        ("quarantine_folder", "Pasta de quarentena"),
+    ]
+    TOGGLES = [
+        ("preserve_originals", "Preservar originais", True),
+        ("auto_delete", "Eliminação automática (sempre desactivada)", True),
+        ("quarantine_enabled", "Quarentena activada", False),
+        ("logging_enabled", "Registos activados", True),
+        ("incremental", "Reprocessamento incremental (não reanalisar ficheiros sem alterações)", False),
+        ("allow_cross_device_move", "Entre discos diferentes: remover o original depois de "
+                                    "copiar e validar por SHA256", False),
+        ("backups_enabled", "Backups da base de dados (configurável)", False),
+    ]
+
+    def __init__(self, ctx: AppContext, parent=None):
+        super().__init__(parent)
+        self.ctx = ctx
+        self.setObjectName("Page")
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        outer.addWidget(scroll)
+        body = QWidget()
+        body.setObjectName("Page")
+        scroll.setWidget(body)
+        lay = QVBoxLayout(body)
+        lay.setContentsMargins(32, 28, 32, 28)
+        lay.setSpacing(14)
+
+        header = PageHeader("Configuração", "Pastas, regras de segurança, Jellyfin e diagnóstico.")
+        b_save = QPushButton("Guardar")
+        b_save.setObjectName("Primary")
+        b_save.clicked.connect(self.save)
+        header.actions.addWidget(b_save)
+        lay.addWidget(header)
+
+        f, fl = panel("Pastas", "A análise só lê estas pastas. Nada é movido sem a sua ordem.")
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(14)
+        self.folder_fields: dict[str, FolderField] = {}
+        for i, (key, label) in enumerate(self.FOLDERS):
+            grid.addWidget(QLabel(label), i, 0)
+            ff = FolderField()
+            self.folder_fields[key] = ff
+            grid.addWidget(ff, i, 1)
+        grid.setColumnStretch(1, 1)
+        fl.addLayout(grid)
+        lay.addWidget(f)
+
+        f, fl = panel("Segurança", "As regras a cinzento estão bloqueadas por definição: "
+                                   "a aplicação nunca apaga ficheiros.")
+        self.toggles: dict[str, QCheckBox] = {}
+        for key, label, locked in self.TOGGLES:
+            cb = QCheckBox(label)
+            cb.setEnabled(not locked)
+            self.toggles[key] = cb
+            fl.addWidget(cb)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Tempo máximo do FFprobe por ficheiro (segundos)"))
+        self.timeout = QSpinBox()
+        self.timeout.setRange(5, 600)
+        row.addWidget(self.timeout)
+        row.addStretch(1)
+        fl.addLayout(row)
+        lay.addWidget(f)
+
+        f, fl = panel("Jellyfin (opcional)", "Compatibilidade de nomes, posters e NFO. "
+                                             "A integração completa chega na Fase 10.")
+        self.jf_enabled = QCheckBox("Usar convenções Jellyfin")
+        fl.addWidget(self.jf_enabled)
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Nome do ficheiro de capa"))
+        self.jf_cover = QLineEdit()
+        self.jf_cover.setMaximumWidth(220)
+        row.addWidget(self.jf_cover)
+        row.addStretch(1)
+        fl.addLayout(row)
+        lay.addWidget(f)
+
+        f, fl = panel("Diagnóstico", "Ferramentas detectadas no sistema. "
+                                     "A aplicação não instala nada por iniciativa própria.")
+        self.diag = QTableWidget(0, 4)
+        self.diag.setHorizontalHeaderLabels(["Ferramenta", "Estado", "Versão", "Para que serve"])
+        self.diag.verticalHeader().hide()
+        self.diag.setShowGrid(False)
+        self.diag.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.diag.horizontalHeader().setStretchLastSection(True)
+        self.diag.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.diag.setMinimumHeight(330)
+        fl.addWidget(self.diag)
+        b = QPushButton("Verificar novamente")
+        b.clicked.connect(self.run_diag)
+        r = QHBoxLayout()
+        r.addStretch(1)
+        r.addWidget(b)
+        fl.addLayout(r)
+        lay.addWidget(f)
+        lay.addStretch(1)
+
+        self.load()
+        self.run_diag()
+
+    def load(self):
+        s = self.ctx.db.all_settings()
+        for k, ff in self.folder_fields.items():
+            ff.setText(s.get(k) or "")
+        for k, cb in self.toggles.items():
+            cb.setChecked(bool(s.get(k)))
+        self.timeout.setValue(int(s.get("ffprobe_timeout") or 30))
+        self.jf_enabled.setChecked(bool(s.get("jellyfin_enabled")))
+        self.jf_cover.setText(s.get("jellyfin_cover_name") or "cover.jpg")
+
+    def save(self):
+        db = self.ctx.db
+        for k, ff in self.folder_fields.items():
+            db.set_setting(k, ff.text())
+        for k, cb in self.toggles.items():
+            db.set_setting(k, cb.isChecked())
+        db.set_setting("ffprobe_timeout", self.timeout.value())
+        db.set_setting("jellyfin_enabled", self.jf_enabled.isChecked())
+        db.set_setting("jellyfin_cover_name", self.jf_cover.text().strip() or "cover.jpg")
+        self.load()
+        self.ctx.data_changed.emit()
+        QMessageBox.information(self, "Configuração", "Configuração guardada.")
+
+    def run_diag(self):
+        res = run_diagnostics()
+        self.diag.setRowCount(len(res))
+        for i, t in enumerate(res):
+            items = [
+                QTableWidgetItem(t.name + (" *" if t.required else "")),
+                QTableWidgetItem("✓ OK" if t.ok else ("✕ Em falta" if t.required else "— Em falta")),
+                QTableWidgetItem(t.version),
+                QTableWidgetItem(t.purpose + ("" if t.ok or not t.install_hint
+                                              else f"  ·  instalar: {t.install_hint}")),
+            ]
+            items[1].setForeground(QColor(theme.OK if t.ok else
+                                          (theme.DANGER if t.required else theme.MUTED)))
+            for c, it in enumerate(items):
+                it.setFlags(it.flags() & ~Qt.ItemIsEditable)
+                self.diag.setItem(i, c, it)

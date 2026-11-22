@@ -1,0 +1,757 @@
+PROJECTO MEDIA ORGANIZER
+ESPECIFICAÇÃO MESTRE DE CONSTRUÇÃO
+
+Objectivo
+Construir uma aplicação desktop local, gratuita e preferencialmente open source, para Ubuntu Linux, destinada à gestão, organização, automatização, manutenção e preservação de uma biblioteca multimédia composta por filmes e música.
+
+A aplicação deverá ter interface gráfica, base de dados local, motor de automatização, módulos independentes, integração com ferramentas externas e compatibilidade com Jellyfin.
+
+O projecto deverá ser modular, seguro, incremental e sustentável.
+
+1. PLATAFORMA
+
+Sistema principal: Ubuntu Linux.
+Linguagem: Python 3.
+Interface gráfica: PySide6.
+Base de dados: SQLite.
+Motor: Python modular.
+Compatibilidade futura: Windows, quando tecnicamente viável.
+Prioridade: funcionamento local, privacidade, baixo consumo de recursos, software gratuito e open source.
+
+2. OBJECTIVO DA APLICAÇÃO
+
+A aplicação deverá centralizar todas as operações sobre a biblioteca de filmes e música.
+
+Deverá funcionar como um gestor inteligente que analisa, identifica, propõe ou executa operações, regista o que fez e permite recuperar operações quando algo corre mal.
+
+3. INTERFACE PRINCIPAL
+
+Criar interface gráfica desktop, com dashboard e menu lateral.
+
+Menu:
+• Dashboard
+• Filmes
+• Música
+• Legendas
+• Capas
+• Análise
+• Duplicados
+• Automatização
+• Histórico
+• Configuração
+
+A interface deverá apresentar inventário, estado das bibliotecas, tarefas, erros, problemas, duplicados, ficheiros em falta e espaço potencialmente recuperável.
+
+4. MÓDULO DE FILMES
+
+Criar um módulo autónomo para:
+• Inventário de filmes.
+• Identificação de título e ano.
+• Identificação de metadados.
+• Renomeação.
+• Organização por pastas.
+• Identificação de versões.
+• Análise técnica através de FFmpeg e FFprobe.
+• Pesquisa de legendas.
+• Identificação de idiomas.
+• Conversão de formatos de legendas.
+• Tradução para Português de Portugal.
+• Pesquisa e obtenção de capas.
+• Criação de metadata.json.
+• Criação de NFO compatível com Jellyfin.
+• Detecção de duplicados.
+• Relatórios.
+• Identificação de ficheiros inválidos.
+• Tratamento de ficheiros de 0 bytes.
+
+5. ORGANIZAÇÃO DE FILMES
+
+Pasta de referência inicial:
+ /home/jose/Vídeos/Filmes
+
+Estrutura:
+Nome do Filme (Ano)/
+
+Os ficheiros associados deverão ficar na pasta correspondente.
+
+Exemplo:
+Filmes/
+  Interstellar (2014)/
+    Interstellar (2014).mkv
+    Interstellar (2014).pt-PT.srt
+    cover.jpg
+    Interstellar (2014).metadata.json
+    Interstellar (2014).nfo
+
+Os nomes deverão ser normalizados, preservando informação relevante e evitando colisões.
+
+Não alterar automaticamente casos de identificação incerta.
+
+Preservar o nome original no registo de operações.
+
+6. ANÁLISE DA BIBLIOTECA DE FILMES
+
+O programa deverá identificar:
+• Filme.
+• Nome original do ficheiro.
+• Ano provável.
+• Extensão.
+• Tamanho.
+• Resolução.
+• Codec de vídeo.
+• Codec de áudio.
+• Duração.
+• Idiomas de áudio quando identificáveis.
+• Legendas existentes.
+• Capas existentes.
+• Metadados existentes.
+• Possíveis duplicados.
+• Ficheiros inválidos ou incompletos.
+
+A análise não deverá alterar ficheiros. A execução aplica as operações previamente definidas pelo sistema.
+
+7. RENOMEAÇÃO
+
+O programa deverá:
+1. Identificar o título.
+2. Identificar o ano, quando possível.
+3. Remover ruído técnico do nome.
+4. Consultar fontes de identificação.
+5. Comparar resultados.
+6. Determinar o nome final.
+7. Evitar colisões.
+8. Registar o nome original e a operação.
+
+Exemplos:
+Interstellar.2014.1080p.BluRay.x264.mkv
+Resultado: Interstellar (2014).mkv
+
+The.Matrix.1999.BDRip.XviD.avi
+Resultado: Matrix (1999).avi
+
+Se o programa não tiver confiança suficiente na identificação, não deverá inventar um título nem alterar automaticamente o nome.
+
+8. LEGENDAS
+
+Prioridade linguística:
+1. Português de Portugal, pt-PT.
+2. Português do Brasil, pt-BR.
+3. Outros idiomas.
+
+Suportar SRT, ASS, SSA, VTT e outros formatos quando tecnicamente viável.
+
+Pesquisar, identificar, associar, converter, traduzir e validar legendas.
+
+A tradução deverá preservar timestamps, numeração, estrutura e sincronização.
+
+Nunca substituir a legenda original.
+
+Criar legendas traduzidas em ficheiros separados.
+
+Preferir motores de tradução locais.
+
+9. PESQUISA DE LEGENDAS
+
+Possíveis fontes e integrações a avaliar:
+• OpenSubtitles.
+• Outras bases de legendas que disponibilizem interfaces ou métodos de acesso permitidos.
+• Legendas locais já existentes.
+
+Pesquisar por:
+1. Correspondência por título.
+2. Correspondência por ano.
+3. Correspondência por identificador do filme.
+4. Correspondência por hash do vídeo, quando suportada.
+5. Correspondência por duração e características da versão.
+6. Idioma.
+7. Sincronização provável.
+
+Respeitar termos de utilização e condições de acesso dos serviços.
+
+10. CONVERSÃO E VALIDAÇÃO DE LEGENDAS
+
+Formatos de entrada:
+• SRT.
+• ASS.
+• SSA.
+• VTT.
+• SUB, mediante avaliação do tipo e possibilidade de conversão.
+
+Validar a estrutura SRT antes e depois da tradução.
+
+Preservar:
+• Timestamps.
+• Numeração dos blocos.
+• Estrutura.
+• Codificação.
+• Sincronização.
+• Ficheiro original.
+
+A tradução de grandes ficheiros deverá ser dividida em blocos, respeitando contexto, timestamps, limites de recursos e mecanismos de retoma.
+
+11. TRADUÇÃO PARA PORTUGUÊS DE PORTUGAL
+
+O sistema deverá ter um motor de tradução separado do módulo de pesquisa.
+
+Motores a avaliar:
+• Argos Translate.
+• Bergamot, se viável.
+• Outros motores locais configuráveis.
+
+A tradução deverá produzir Português de Portugal natural, evitar brasileirismos quando possível, manter nomes próprios e coerência contextual, preservar estrutura e validar resultados.
+
+A aplicação não deverá traduzir o ficheiro inteiro indiscriminadamente como texto simples.
+
+12. CAPAS E POSTERS DE FILMES
+
+Pesquisar capas em fontes adequadas e legalmente acessíveis.
+
+Fontes a considerar:
+• IMDb, quando o acesso permitido e disponível possibilitar obter imagens.
+• TMDb, mediante configuração de acesso à API.
+• Outras fontes de metadados e imagens legalmente acessíveis.
+
+Regras:
+• Procurar imagem correspondente ao filme.
+• Evitar posters de filmes homónimos errados.
+• Preferir imagens de boa resolução.
+• Preservar capas existentes.
+• Não substituir automaticamente uma capa válida.
+• Registar fonte da imagem.
+• Permitir substituição controlada.
+
+Guardar, por regra, como cover.jpg, ou usar nomenclatura compatível com Jellyfin configurável.
+
+13. METADADOS E NFO
+
+Criar metadata.json e NFO.
+
+Exemplo JSON:
+{
+  "title": "Interstellar",
+  "original_title": "Interstellar",
+  "year": 2014,
+  "imdb_id": "tt0816692",
+  "genre": ["Science Fiction", "Drama"],
+  "duration_minutes": 169,
+  "video_file": "Interstellar (2014).mkv",
+  "subtitle": "Interstellar (2014).pt-PT.srt",
+  "poster": "cover.jpg"
+}
+
+O JSON deverá permitir a inclusão de campos adicionais sem obrigar a reconstruir o programa.
+
+O NFO deverá ser criado em formato compatível com Jellyfin e sistemas relacionados, com os campos disponíveis e confirmados.
+
+14. FICHEIROS DE 0 BYTES
+
+Não tentar processar ficheiros de vídeo ou áudio com 0 bytes como conteúdos normais.
+
+Preservar o ficheiro.
+Não tentar converter.
+Não tentar identificar através de ffprobe.
+Registar a ocorrência.
+Criar aviso local.
+Não interromper os restantes processos.
+
+15. MÓDULO DE MÚSICA
+
+Organizar música por artista, álbum e faixa.
+
+Identificar:
+• Artista.
+• Artista do álbum.
+• Álbum.
+• Título.
+• Número da faixa.
+• Número do disco.
+• Ano.
+• Género.
+• Tags existentes.
+• Formato.
+• Duração.
+• Bitrate.
+• Sample rate.
+• Codec.
+• Capa.
+• Possíveis duplicados.
+
+Suportar MP3, FLAC, M4A, AAC, OGG, OPUS, WAV, WMA e ALAC, sempre que as ferramentas disponíveis suportarem.
+
+Integrar, quando adequado, Mutagen, Beets, MusicBrainz Picard e outras ferramentas open source.
+
+Não converter nem degradar a qualidade original.
+
+Preservar versões diferentes.
+
+16. ORGANIZAÇÃO MUSICAL
+
+Estrutura de referência:
+Biblioteca_Jellyfin/
+  Artista/
+    Álbum (Ano)/
+      01 - Faixa.flac
+      02 - Faixa.flac
+      cover.jpg
+
+A estrutura deverá ser configurável, mas esta deverá ser a estrutura de referência.
+
+17. IDENTIFICAÇÃO MUSICAL E FERRAMENTAS
+
+Avaliar integração com:
+• MusicBrainz Picard, para identificação, metadados e etiquetas.
+• Beets, para organização automatizada e importação.
+• Mutagen, para leitura e escrita de tags.
+• Czkawka, para duplicados e ficheiros semelhantes.
+
+As ferramentas externas não deverão reorganizar a biblioteca sem controlo da aplicação principal.
+
+A aplicação deverá controlar origem, destino, regras de renomeação, duplicados, quarentena, registos e execução.
+
+18. TAGS MUSICAIS
+
+Corrigir, quando necessário:
+• Artist.
+• Album.
+• Title.
+• Track.
+• Disc.
+• Year.
+• Genre.
+• Album Artist.
+
+Preservar as tags existentes quando válidas.
+
+19. CAPAS MUSICAIS
+
+A aplicação deverá:
+• Identificar capa do álbum.
+• Obter imagem quando disponível.
+• Guardar a capa na pasta do álbum.
+• Preservar capas embutidas existentes.
+• Permitir actualizar capas.
+• Evitar capas de álbuns incorrectos.
+• Registar a fonte.
+
+20. DUPLICADOS MUSICAIS
+
+Identificar:
+• Duplicados exactos por hash.
+• Duplicados prováveis por tags, duração, nome, tamanho e características.
+• Fingerprinting acústico, quando disponível e adequado.
+
+Distinguir:
+• Remasterizações.
+• Versões ao vivo.
+• Remixes.
+• Edições diferentes.
+• Álbuns com versões alternativas.
+• Faixas com qualidade diferente.
+• Diferentes masters.
+
+Não classificar automaticamente versões diferentes como duplicados definitivos.
+
+21. SISTEMA DE DUPLICADOS TRANSVERSAL
+
+O sistema deverá analisar filmes, música, legendas, capas e ficheiros auxiliares.
+
+Métodos:
+• SHA256.
+• Nome.
+• Tamanho.
+• Duração.
+• Resolução.
+• Codec.
+• Metadados.
+• Fingerprint acústico, quando suportado.
+
+O relatório deverá apresentar:
+• Número de duplicados exactos.
+• Número de duplicados prováveis.
+• Número de versões diferentes.
+• Espaço potencialmente libertável.
+• Estado da confiança.
+• Localização dos ficheiros.
+• Recomendações.
+
+Nunca apagar duplicados automaticamente.
+
+22. QUARENTENA
+
+Estrutura de referência:
+Quarentena/
+  Duplicados/
+  Ficheiros_0_bytes/
+  Identificacao_Incerta/
+  Conflitos/
+
+Os ficheiros enviados para quarentena deverão conservar:
+• Nome original.
+• Localização original.
+• Data da operação.
+• Motivo.
+• Identificador da operação.
+• Possibilidade de reposição.
+
+Quarentena não significa eliminação.
+
+23. DASHBOARD E DIAGNÓSTICO
+
+Dashboard com:
+• Estado dos filmes.
+• Estado da música.
+• Legendas em falta.
+• Capas em falta.
+• Metadados incompletos.
+• Duplicados.
+• Ficheiros inválidos.
+• Erros.
+• Espaço potencialmente recuperável.
+• Tarefas.
+• Histórico.
+
+Cada indicador deverá permitir abrir a respectiva lista ou relatório.
+
+24. AUTOMATIZAÇÃO
+
+Permitir automatizar:
+• Análise.
+• Organização.
+• Renomeação.
+• Pesquisa de legendas.
+• Tradução.
+• Capas.
+• Metadados.
+• Tags musicais.
+• Duplicados.
+• Relatórios.
+• Limpeza controlada.
+• Retoma de tarefas interrompidas.
+• Execução incremental.
+
+Modos:
+• Análise.
+• Automático.
+• Reparação.
+• Recuperação.
+
+25. SEGURANÇA
+
+Regras obrigatórias:
+• Preservação dos originais.
+• Não eliminar ficheiros automaticamente.
+• Não substituir ficheiros indiscriminadamente.
+• Não converter áudio automaticamente.
+• Não alterar timestamps de legendas.
+• Não destruir versões diferentes.
+• Não movimentar ficheiros sem registo.
+• Não executar limpeza irreversível.
+• Validar operações.
+• Verificar destinos.
+• Evitar conflitos.
+• Garantir retoma de processos interrompidos.
+
+26. SISTEMA DE OPERAÇÕES
+
+Cada operação deverá possuir identificador único.
+
+Exemplo:
+OP_20261122_001
+
+Registar:
+• Identificador.
+• Tipo de operação.
+• Caminho original.
+• Caminho de destino.
+• Data e hora.
+• Estado.
+• Resultado.
+• Erros.
+
+Exemplo de registo JSON:
+{
+  "operation_id": "OP_20261122_001",
+  "operation": "rename",
+  "original_path": "/Filmes/filme.mkv",
+  "new_path": "/Filmes/Filme (2020)/Filme (2020).mkv",
+  "timestamp": "2026-11-22T12:00:00",
+  "status": "completed"
+}
+
+Implementar rastreabilidade e recuperação quando tecnicamente possível.
+
+27. PROTECÇÃO ANTES DE MOVIMENTAÇÃO
+
+Antes de operações sobre ficheiros:
+1. Verificar ficheiro.
+2. Verificar destino.
+3. Garantir tratamento de conflitos.
+4. Copiar, quando a política exigir preservação.
+5. Validar a cópia.
+6. Registar operação.
+7. Só realizar movimentação quando a política definida permitir.
+8. Nunca apagar irreversivelmente por defeito.
+
+28. BASE DE DADOS
+
+Utilizar SQLite.
+
+Tabelas a considerar:
+• Movies.
+• Music.
+• Albums.
+• Artists.
+• Subtitles.
+• Covers.
+• Duplicates.
+• Operations.
+• OperationFiles.
+• Jobs.
+• Settings.
+• Sources.
+• Errors.
+
+Guardar inventário, metadados, tarefas, operações, erros, configurações, duplicados e histórico.
+
+Evitar reanalisar continuamente ficheiros já identificados, salvo alterações ou necessidade de atualização.
+
+29. TECNOLOGIAS
+
+Avaliar e integrar:
+• Python 3.
+• PySide6.
+• SQLite.
+• FFmpeg.
+• FFprobe.
+• Mutagen.
+• Beets.
+• MusicBrainz.
+• Czkawka.
+• Argos Translate.
+• OpenSubtitles.
+• IMDb, quando o acesso disponível e permitido o possibilitar.
+• TMDb, mediante configuração adequada.
+• Jellyfin.
+
+Verificar disponibilidade e versões das ferramentas.
+
+Não instalar dependências indiscriminadamente.
+
+30. IA LOCAL OPCIONAL
+
+Avaliar:
+• Ollama.
+• Modelos de linguagem locais.
+• Análise de nomes complexos.
+• Identificação de casos ambíguos.
+• Sugestões de organização.
+• Resumos de relatórios.
+• Apoio à resolução de problemas.
+
+A IA não deverá ter autorização directa para apagar, substituir ou movimentar indiscriminadamente ficheiros.
+
+As operações deverão ser controladas pelo motor da aplicação.
+
+31. CONFIGURAÇÃO
+
+Assistente de configuração inicial.
+
+Filmes:
+Pasta de filmes configurável.
+Valor inicial: /home/jose/Vídeos/Filmes
+
+Música:
+Pasta de origem configurável.
+Pasta de biblioteca configurável.
+Pasta de quarentena configurável.
+
+Jellyfin:
+Configuração opcional.
+Compatibilidade de biblioteca.
+Nomes.
+Posters.
+NFO.
+Idiomas.
+Estrutura.
+
+Diagnóstico:
+Verificar Python.
+FFmpeg.
+FFprobe.
+Mutagen.
+Beets.
+Czkawka.
+Argos Translate.
+
+Segurança:
+Preservar originais: ACTIVADO.
+Eliminação automática: DESACTIVADA.
+Quarentena: ACTIVADA.
+Registos: ACTIVADOS.
+Backups: CONFIGURÁVEIS.
+Reprocessamento: INCREMENTAL.
+
+32. RELATÓRIOS
+
+Criar relatórios TXT, CSV, JSON e HTML.
+Possibilidade de PDF.
+
+Relatórios de:
+• Filmes.
+• Música.
+• Duplicados.
+• Erros.
+• Operações.
+• Ficheiros em falta.
+• Espaço potencialmente recuperável.
+
+33. ESTRUTURA TÉCNICA
+
+MediaOrganizer/
+  app.py
+  requirements.txt
+  README.md
+  interface/
+    main_window.py
+    dashboard.py
+    movies_view.py
+    music_view.py
+    subtitles_view.py
+    duplicates_view.py
+    history_view.py
+    settings_view.py
+  core/
+    scanner.py
+    database.py
+    organizer.py
+    safety.py
+    logger.py
+    operations.py
+    scheduler.py
+    reporting.py
+  movies/
+    identification.py
+    metadata.py
+    subtitles.py
+    translation.py
+    posters.py
+    nfo.py
+    duplicates.py
+  music/
+    identification.py
+    tagging.py
+    albums.py
+    covers.py
+    duplicates.py
+    organizer.py
+  integrations/
+    imdb.py
+    tmdb.py
+    opensubtitles.py
+    musicbrainz.py
+    beets.py
+    jellyfin.py
+  database/
+    mediaorganizer.db
+  logs/
+  reports/
+  backups/
+  quarantine/
+
+Separar interface, núcleo, módulos de filmes, módulos de música, integrações, base de dados, relatórios, registos e backups.
+
+Evitar scripts gigantes.
+
+34. DESENVOLVIMENTO
+
+Construir por fases.
+
+Não implementar todas as funcionalidades simultaneamente.
+
+Criar primeiro a fundação da aplicação.
+
+Testar cada módulo.
+
+Preservar versões funcionais.
+
+Documentar alterações.
+
+Não substituir funcionalidades existentes sem necessidade.
+
+Antes de alterações, analisar ficheiros e estado actual do projecto.
+
+35. PLANO DE CONSTRUÇÃO
+
+Fase 1:
+Fundação da aplicação, interface, base de dados, configurações, registos, sistema de segurança e diagnóstico.
+
+Fase 2:
+Inventário de filmes e música, identificação de ficheiros, guardar resultados e permitir pesquisa.
+
+Fase 3:
+Organização de filmes, pastas, nomes, identificação, segurança, registos e recuperação.
+
+Fase 4:
+Pesquisa, associação, identificação linguística, conversão e validação de legendas.
+
+Fase 5:
+Motor local de tradução, Português de Portugal, processamento em blocos, validação e retoma.
+
+Fase 6:
+Pesquisa de capas, imagens, NFO e JSON.
+
+Fase 7:
+Música, tags, artistas, álbuns, capas, organização e integração com Beets e MusicBrainz.
+
+Fase 8:
+Duplicados, hash, comparação, versões, análise de espaço e quarentena.
+
+Fase 9:
+Automatização, tarefas agendadas, retoma, relatórios e manutenção.
+
+Fase 10:
+Integração Jellyfin, metadados, estrutura, capas e compatibilidade.
+
+Fase 11:
+Testes de segurança, recuperação, erros, conflitos e bibliotecas reais.
+
+Fase 12:
+Empacotamento, instalação, documentação, backups e versão estável.
+
+36. MÉTODO DE TRABALHO
+
+Trabalhar passo a passo.
+
+Fornecer comandos exactos.
+
+Evitar instruções excessivamente longas para executar no terminal.
+
+Verificar resultados antes de avançar.
+
+Não afirmar que testes, backups ou operações foram concluídos sem confirmação.
+
+Não inventar resultados.
+
+Antes de alterações, inspeccionar os ficheiros, scripts, versões funcionais e estado actual.
+
+37. RESULTADO FINAL
+
+Construir uma aplicação desktop integrada, local, modular, segura, automatizada, compatível com Jellyfin, capaz de gerir filmes e música, pesquisar e traduzir legendas, obter capas, identificar duplicados, organizar ficheiros, gerar metadados e preservar a biblioteca original.
+
+38. PRIORIDADE INICIAL
+
+Construir a versão 0.1:
+• Aplicação gráfica que abre correctamente no Ubuntu.
+• Dashboard.
+• Módulo Filmes.
+• Módulo Música.
+• Configuração de pastas.
+• Base de dados.
+• Inventário.
+• Sistema de registos.
+• Protecção dos ficheiros.
+• Sistema de operações e recuperação.
+
+Só depois de esta fundação funcionar acrescentar automatização real.
+
+Não construir tudo num único script gigante.

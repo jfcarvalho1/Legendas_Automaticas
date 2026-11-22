@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+
+# dados locais — nunca vão para o GitHub
+database/*
+logs/*
+reports/*
+backups/*
+quarantine/*
+!database/.gitkeep
+!logs/.gitkeep
+!reports/.gitkeep
+!backups/.gitkeep
+!quarantine/.gitkeep
