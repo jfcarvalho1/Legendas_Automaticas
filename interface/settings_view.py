@@ -68,6 +68,8 @@ class SettingsView(QWidget):
         ("quarantine_enabled", "Quarentena activada", False),
         ("logging_enabled", "Registos activados", True),
         ("incremental", "Reprocessamento incremental (não reanalisar ficheiros sem alterações)", False),
+        ("clean_leftovers", "Ao organizar, deixar na pasta do filme só os ficheiros indicados "
+                            "(o resto vai para a quarentena)", False),
         ("allow_cross_device_move", "Entre discos diferentes: remover o original depois de "
                                     "copiar e validar por SHA256", False),
         ("backups_enabled", "Backups da base de dados (configurável)", False),
@@ -139,6 +141,27 @@ class SettingsView(QWidget):
         fl.addLayout(row)
         lay.addWidget(f)
 
+        f, fl = panel("TMDb (opcional)",
+                      "Confirma título e ano dos filmes na base de dados The Movie Database. "
+                      "É gratuito: crie conta em themoviedb.org → Definições → API e cole aqui a "
+                      "«API Key» ou o «API Read Access Token». Sem chave, a identificação usa só "
+                      "o nome do ficheiro.")
+        row = QHBoxLayout()
+        row.addWidget(QLabel("Chave"))
+        self.tmdb_key = QLineEdit()
+        self.tmdb_key.setEchoMode(QLineEdit.Password)
+        self.tmdb_key.setPlaceholderText("cole aqui a chave")
+        row.addWidget(self.tmdb_key, 1)
+        row.addWidget(QLabel("Idioma dos títulos"))
+        self.tmdb_lang = QLineEdit()
+        self.tmdb_lang.setMaximumWidth(90)
+        row.addWidget(self.tmdb_lang)
+        b_test = QPushButton("Testar")
+        b_test.clicked.connect(self._test_tmdb)
+        row.addWidget(b_test)
+        fl.addLayout(row)
+        lay.addWidget(f)
+
         f, fl = panel("Diagnóstico", "Ferramentas detectadas no sistema. "
                                      "A aplicação não instala nada por iniciativa própria.")
         self.diag = QTableWidget(0, 4)
@@ -171,6 +194,8 @@ class SettingsView(QWidget):
         self.timeout.setValue(int(s.get("ffprobe_timeout") or 30))
         self.jf_enabled.setChecked(bool(s.get("jellyfin_enabled")))
         self.jf_cover.setText(s.get("jellyfin_cover_name") or "cover.jpg")
+        self.tmdb_key.setText(s.get("tmdb_api_key") or "")
+        self.tmdb_lang.setText(s.get("tmdb_language") or "en-US")
 
     def save(self):
         db = self.ctx.db
@@ -181,9 +206,23 @@ class SettingsView(QWidget):
         db.set_setting("ffprobe_timeout", self.timeout.value())
         db.set_setting("jellyfin_enabled", self.jf_enabled.isChecked())
         db.set_setting("jellyfin_cover_name", self.jf_cover.text().strip() or "cover.jpg")
+        db.set_setting("tmdb_api_key", self.tmdb_key.text().strip())
+        db.set_setting("tmdb_language", self.tmdb_lang.text().strip() or "en-US")
         self.load()
         self.ctx.data_changed.emit()
         QMessageBox.information(self, "Configuração", "Configuração guardada.")
+
+    def _test_tmdb(self):
+        from integrations.tmdb import TMDbClient, TMDbError
+        key = self.tmdb_key.text().strip()
+        if not key:
+            QMessageBox.information(self, "TMDb", "Cole primeiro a chave.")
+            return
+        try:
+            TMDbClient(key).test()
+            QMessageBox.information(self, "TMDb", "Chave válida. Não se esqueça de carregar em Guardar.")
+        except TMDbError as e:
+            QMessageBox.warning(self, "TMDb", str(e))
 
     def run_diag(self):
         res = run_diagnostics()

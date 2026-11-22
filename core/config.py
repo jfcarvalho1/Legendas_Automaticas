@@ -8,7 +8,7 @@ from pathlib import Path
 IS_WINDOWS = sys.platform.startswith("win")
 
 APP_NAME = "Media Organizer"
-APP_VERSION = "0.1.1"
+APP_VERSION = "0.2.0"
 
 # Raiz do projecto (pasta onde está o app.py). Pode ser alterada com a
 # variável de ambiente MEDIAORGANIZER_HOME (útil para testes).
@@ -22,7 +22,8 @@ BACKUPS_DIR = APP_ROOT / "backups"
 QUARANTINE_DIR = APP_ROOT / "quarantine"
 ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
 
-QUARANTINE_CATEGORIES = ("Duplicados", "Ficheiros_0_bytes", "Identificacao_Incerta", "Conflitos")
+QUARANTINE_CATEGORIES = ("Duplicados", "Ficheiros_0_bytes", "Identificacao_Incerta", "Conflitos",
+                         "Restos_Organizacao")
 
 
 def ensure_dirs() -> None:
@@ -47,6 +48,12 @@ DEFAULT_SETTINGS: dict = {
     # Jellyfin
     "jellyfin_enabled": False,
     "jellyfin_cover_name": "cover.jpg",
+    # Organização de filmes (Fase 3)
+    "strip_leading_the": True,
+    "clean_leftovers": True,         # na pasta final só ficam os ficheiros do filme       # "The Matrix" -> "Matrix (1999)", como na especificação
+    "tmdb_api_key": "",
+    "tmdb_language": "en-US",
+    "last_rename_batch": "",
     # Técnico
     "ffprobe_timeout": 30,
     "first_run_done": False,

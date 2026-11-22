@@ -115,7 +115,7 @@ class Scanner:
             if (incremental and prev and prev["size"] == st.st_size
                     and prev["mtime"] == st.st_mtime and prev["status"] != "missing"):
                 stats["skipped"] += 1
-                self._refresh_movie_sidecars(f)
+                self.refresh_movie_sidecars(f)
                 continue
             row = self._analyse_movie(f, st, has_probe)
             if row["status"] in ("zero_bytes", "invalid"):
@@ -147,6 +147,13 @@ class Scanner:
                 if (alone and base in MOVIE_COVER_NAMES) or base in (
                         f"{stem.lower()}-poster", f"{stem.lower()}.poster", f"{stem.lower()}"):
                     cover = str(s)
+        if alone:  # legendas em subpastas (Subs/, Legendas/...)
+            for dp, _dn, fns in os.walk(f.parent):
+                if Path(dp) == f.parent:
+                    continue
+                for fn in fns:
+                    if Path(fn).suffix.lower() in SUBTITLE_EXTENSIONS:
+                        subs.append(str(Path(dp).relative_to(f.parent) / fn))
         names = {s.name.lower() for s in siblings}
         has_nfo = f"{stem.lower()}.nfo" in names or (alone and "movie.nfo" in names)
         has_json = f"{stem.lower()}.metadata.json" in names
@@ -156,7 +163,7 @@ class Scanner:
             "has_nfo": 1 if has_nfo else 0, "has_metadata_json": 1 if has_json else 0,
         }
 
-    def _refresh_movie_sidecars(self, f: Path) -> None:
+    def refresh_movie_sidecars(self, f: Path) -> None:
         sc = self._movie_sidecars(f)
         self.db.execute(
             "UPDATE movies SET external_subtitles=?, has_cover=?, cover_path=?, has_nfo=?, "

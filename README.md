@@ -2,7 +2,7 @@
 
 Aplicação desktop local, gratuita e open source, para Ubuntu, que gere uma biblioteca de **filmes** e **música**: inventário, análise técnica, legendas, capas, metadados, duplicados e compatibilidade com **Jellyfin**. Os originais ficam sempre preservados.
 
-> Versão actual: **0.1.0**, a fundação (Fase 1 + inventário da Fase 2).
+> Versão actual: **0.2.0**: fundação, inventário e organização/renomeação de filmes (Fases 1–3).
 > A especificação completa está em [`docs/ESPECIFICACAO.txt`](docs/ESPECIFICACAO.txt).
 
 ## Instalar no Windows
@@ -42,6 +42,34 @@ cd ~/MediaOrganizer && git pull && bash instalar.sh
 ```
 
 A base de dados, os registos e a quarentena não são tocados pela actualização.
+
+## Organizar e renomear filmes
+
+1. **Filmes** → **Analisar agora** (faz o inventário; não altera nada).
+2. **Organizar** → **Analisar e propor**: aparece a lista com o nome novo de cada filme.
+3. Reveja. Os incertos (sem ano no nome) não vêm seleccionados: duplo clique para corrigir título e ano.
+4. **Aplicar seleccionados**. Se não gostar do resultado: **Reverter último lote**.
+
+Resultado:
+
+```
+Filmes/
+  Interstellar (2014)/
+    Interstellar (2014).mkv
+    Interstellar (2014).pt-PT.srt
+    Interstellar (2014).en.srt
+    cover.jpg
+    Interstellar (2014).nfo
+    Interstellar (2014).metadata.json
+```
+
+- Na pasta final **só ficam** o vídeo, as legendas, a capa, o NFO e o metadata.json.
+- **Legendas em subpastas** (`Subs/`, `Legendas/`, `Subs/2_English.srt`…) são recolhidas e renomeadas com o idioma (`.pt-PT`, `.pt-BR`, `.pt`, `.en`, …).
+- O resto (`.txt`, samples, `.nfo` de grupos de release, links, imagens extra) vai para a **quarentena** `Restos_Organizacao`, no mesmo disco, fora da biblioteca. Nada é apagado.
+- A pasta antiga, se ficar vazia, é removida; a reversão volta a criá-la.
+- Duas versões do mesmo filme ficam juntas: `Gladiator (2000).mkv` e `Gladiator (2000) - 720p.mkv`.
+- Nunca escreve por cima de um ficheiro existente; se houver conflito, o filme fica assinalado e não é tocado.
+- Opcional: com uma chave gratuita do **TMDb** (Configuração), título e ano são confirmados online.
 
 ## O que a versão 0.1 faz
 
@@ -92,7 +120,7 @@ cd ~/MediaOrganizer && .venv/bin/python -m unittest discover -s tests -v
 
 1. ✅ Fundação: interface, base de dados, configurações, registos, segurança, diagnóstico
 2. ✅ Inventário de filmes e música (pesquisa e filtros)
-3. Organização e renomeação de filmes (`Título (Ano)/`)
+3. ✅ Organização e renomeação de filmes (`Título (Ano)/`)
 4. Legendas: pesquisa, associação, idioma, conversão, validação
 5. Tradução local para Português de Portugal
 6. Capas, NFO e metadata.json

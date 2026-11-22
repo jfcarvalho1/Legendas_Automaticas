@@ -14,6 +14,7 @@ from .dashboard import DashboardView
 from .history_view import HistoryView
 from .movies_view import MoviesView
 from .music_view import MusicView
+from .organize_view import OrganizeView
 from .placeholder_view import PlaceholderView
 from .settings_view import FolderField, SettingsView
 
@@ -23,7 +24,7 @@ NAV = [
     ("music", "♫   Música"),
     ("subtitles", "✎   Legendas"),
     ("covers", "▢   Capas"),
-    ("analysis", "⌕   Análise"),
+    ("analysis", "⌕   Organizar"),
     ("duplicates", "⧉   Duplicados"),
     ("automation", "⟳   Automatização"),
     ("history", "☰   Histórico"),
@@ -68,7 +69,7 @@ class MainWindow(QMainWindow):
             "music": MusicView(ctx),
             "subtitles": PlaceholderView(ctx, "subtitles"),
             "covers": PlaceholderView(ctx, "covers"),
-            "analysis": PlaceholderView(ctx, "analysis"),
+            "analysis": OrganizeView(ctx),
             "duplicates": PlaceholderView(ctx, "duplicates"),
             "automation": PlaceholderView(ctx, "automation"),
             "history": HistoryView(ctx),

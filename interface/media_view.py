@@ -47,6 +47,7 @@ class MediaView(QWidget):
         self.btn_scan = QPushButton("Analisar agora")
         self.btn_scan.setObjectName("Primary")
         self.btn_scan.clicked.connect(self._scan)
+        self.header_actions = header.actions
         header.actions.addWidget(self.btn_report)
         header.actions.addWidget(self.btn_scan)
         lay.addWidget(header)

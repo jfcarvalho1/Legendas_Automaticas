@@ -46,6 +46,29 @@ class ScanWorker(QThread):
             self.scanner.cancel()
 
 
+class FuncWorker(QThread):
+    """Executa fn(progress, cancelled) numa thread e devolve o resultado."""
+    progress = Signal(int, int, str)
+    done = Signal(object)
+    failed = Signal(str)
+
+    def __init__(self, fn, parent=None):
+        super().__init__(parent)
+        self.fn = fn
+        self._cancel = False
+
+    def cancel(self):
+        self._cancel = True
+
+    def run(self):
+        try:
+            res = self.fn(lambda a, b, c: self.progress.emit(a, b, c), lambda: self._cancel)
+            self.done.emit(res)
+        except Exception as e:  # noqa: BLE001
+            log.exception("Tarefa falhou")
+            self.failed.emit(str(e))
+
+
 class AppContext(QObject):
     data_changed = Signal()
     scan_started = Signal(str)

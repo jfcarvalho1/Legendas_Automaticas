@@ -49,6 +49,13 @@ class MoviesView(MediaView):
     search_cols = ("title_guess", "filename", "folder")
     order_by = "title_guess COLLATE NOCASE"
 
+    def __init__(self, ctx, parent=None):
+        super().__init__(ctx, parent)
+        from PySide6.QtWidgets import QPushButton
+        b = QPushButton("Organizar / renomear…")
+        b.clicked.connect(lambda: self.ctx.navigate.emit("analysis", ""))
+        self.header_actions.insertWidget(0, b)
+
     def detail_html(self, r: dict) -> str:
         e = lambda v: html.escape(str(v)) if v not in (None, "") else "<span style='color:#8b98a5'>—</span>"  # noqa: E731
         sug = suggested_name(r.get("title_guess") or "", r.get("year_guess"))
@@ -81,5 +88,5 @@ class MoviesView(MediaView):
                 f"<span style='color:{conf_color}'>confiança {e(conf)}</span> · "
                 f"{e(status_fmt(r.get('status'), r))}</div>"
                 f"<table style='margin-top:10px'>{body}</table>"
-                "<p style='color:#8b98a5;font-size:9pt;margin-top:12px'>A renomeação automática "
-                "chega na Fase 3 e nunca é aplicada a casos de confiança baixa.</p>")
+                "<p style='color:#8b98a5;font-size:9pt;margin-top:12px'>Casos de confiança baixa "
+                "nunca são renomeados sem confirmação (página Organizar).</p>")

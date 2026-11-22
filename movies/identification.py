@@ -34,12 +34,14 @@ def parse_filename(filename: str) -> dict:
     """Devolve {'title', 'year', 'confidence'} — confiança: alta, média ou baixa."""
     stem = filename.rsplit(".", 1)[0] if "." in filename else filename
     original = stem
-    stem = _BRACKETS.sub(" ", stem)
     # Já no formato "Título (Ano)"
     m = re.match(r"^\s*(.+?)\s*\((\d{4})\)\s*$", stem)
     if m and 1900 <= int(m.group(2)) <= date.today().year + 1:
         return {"title": m.group(1).strip(), "year": int(m.group(2)), "confidence": "alta"}
 
+    stem = re.sub(r"[\[(]((?:19|20)\d{2})[\])]", r" \1 ", stem)  # [2014] / (2014) -> 2014
+    stem = _BRACKETS.sub(" ", stem)
+    stem = re.sub(r"\([^)]*\)", " ", stem)
     text = re.sub(r"[._]+", " ", stem)
     text = re.sub(r"\s+-\s+", " - ", text)
     year = None

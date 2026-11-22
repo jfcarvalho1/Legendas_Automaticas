@@ -49,7 +49,18 @@ def check_source(src: Path) -> None:
         raise SafetyError(f"Sem permissão de leitura: {src}")
 
 
-def check_destination(dst: Path) -> None:
+def is_case_only_rename(src: Path, dst: Path) -> bool:
+    """Windows/macOS: 'matrix.mkv' -> 'Matrix.mkv' aponta para o mesmo ficheiro."""
+    try:
+        return (src != dst and str(src).lower() == str(dst).lower()
+                and dst.exists() and os.path.samefile(src, dst))
+    except OSError:
+        return False
+
+
+def check_destination(dst: Path, src: Path | None = None) -> None:
+    if src is not None and is_case_only_rename(src, dst):
+        return
     if dst.exists() or dst.is_symlink():
         raise SafetyError(f"Conflito: o destino já existe: {dst}")
     parent = dst.parent
@@ -94,7 +105,7 @@ class SafeFileManager:
         details = dict(details or {})
         try:
             check_source(src)
-            check_destination(dst)
+            check_destination(dst, src)
             size = src.stat().st_size
             details.update({"original_name": src.name, "size": size})
             dst.parent.mkdir(parents=True, exist_ok=True)
@@ -133,20 +144,21 @@ class SafeFileManager:
         return self.ops.get(op_id)
 
     # -- quarentena --------------------------------------------------------
-    def quarantine_root(self) -> Path:
-        root = Path(self.db.get_setting("quarantine_folder"))
+    def quarantine_root(self, root: Path | None = None) -> Path:
+        root = Path(root or self.db.get_setting("quarantine_folder"))
         for c in QUARANTINE_CATEGORIES:
             (root / c).mkdir(parents=True, exist_ok=True)
         return root
 
-    def quarantine(self, src: Path | str, category: str, reason: str) -> dict:
+    def quarantine(self, src: Path | str, category: str, reason: str,
+                   root: Path | None = None, details: dict | None = None) -> dict:
         if not self.db.get_setting("quarantine_enabled"):
             raise SafetyError("A quarentena está desactivada na configuração.")
         if category not in QUARANTINE_CATEGORIES:
             raise SafetyError(f"Categoria de quarentena desconhecida: {category}")
         src = Path(src)
         op_id = self.ops.new_operation_id()
-        folder = self.quarantine_root() / category
+        folder = self.quarantine_root(root) / category
         dst = unique_destination(folder / f"{op_id}__{src.name}")
         manifest = {
             "operation_id": op_id,
@@ -159,7 +171,7 @@ class SafeFileManager:
             "restorable": True,
         }
         op = self.safe_move(src, dst, "quarantine", reason=reason, op_id=op_id,
-                            details={"category": category})
+                            details={"category": category, **(details or {})})
         try:
             with open(folder / f"{op_id}.json", "w", encoding="utf-8") as f:
                 json.dump(manifest, f, ensure_ascii=False, indent=2)
@@ -185,7 +197,10 @@ class SafeFileManager:
                                 details={"reverts": op_id})
         if new_op["status"] == COMPLETED:
             self.ops.mark_reverted(op_id, new_op["operation_id"])
-            self._mark_media_status(current, original, "pending")
+            if op["operation"] == "rename":
+                self._mark_media_status(current, original, "ok", reset_mtime=False)
+            else:
+                self._mark_media_status(current, original, "pending")
             # manifesto de quarentena deixa de ser necessário: marcado, não apagado
             if op["operation"] == "quarantine":
                 mf = current.parent / f"{op_id}.json"
@@ -200,13 +215,40 @@ class SafeFileManager:
                         pass
         return new_op
 
-    def _mark_media_status(self, old: Path, new: Path, status: str) -> None:
+    def revert_batch(self, batch_id: str) -> tuple[int, list[str]]:
+        """Reverte, pela ordem inversa, todas as operações concluídas de um lote."""
+        ops = self.db.query(
+            "SELECT operation_id FROM operations WHERE status='completed' "
+            "AND operation IN ('rename', 'move', 'quarantine') AND details LIKE ? "
+            "ORDER BY id DESC", (f'%"batch": "{batch_id}"%',))
+        done, errors = 0, []
+        created_dirs: set[Path] = set()
+        for o in ops:
+            op = self.ops.get(o["operation_id"])
+            try:
+                self.revert(o["operation_id"])
+                done += 1
+                created_dirs.add(Path(op["new_path"]).parent)
+            except (SafetyError, OSError) as e:
+                errors.append(f"{o['operation_id']}: {e}")
+        # pastas criadas pelo lote e que ficaram completamente vazias
+        for d in sorted(created_dirs, key=lambda x: len(str(x)), reverse=True):
+            try:
+                if d.is_dir() and not any(d.iterdir()):
+                    d.rmdir()
+            except OSError:
+                pass
+        return done, errors
+
+    def _mark_media_status(self, old: Path, new: Path, status: str,
+                           reset_mtime: bool = True) -> None:
         """Mantém o inventário coerente depois de mover um ficheiro."""
         for table in ("movies", "music"):
             row = self.db.query_one(f"SELECT id FROM {table} WHERE path=?", (str(old),))
             if row:
                 if self.db.query_one(f"SELECT id FROM {table} WHERE path=?", (str(new),)):
                     self.db.execute(f"DELETE FROM {table} WHERE path=?", (str(new),))
+                mt = "NULL" if reset_mtime else "mtime"
                 self.db.execute(
-                    f"UPDATE {table} SET path=?, folder=?, filename=?, mtime=NULL, status=? "
+                    f"UPDATE {table} SET path=?, folder=?, filename=?, mtime={mt}, status=? "
                     f"WHERE id=?", (str(new), str(new.parent), new.name, status, row["id"]))

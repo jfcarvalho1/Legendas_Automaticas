@@ -121,11 +121,15 @@ STATUS_LABELS = {
     "ok": "OK", "zero_bytes": "0 bytes", "invalid": "Inválido", "missing": "Em falta",
     "quarantined": "Quarentena", "pending": "Por reanalisar",
     "completed": "Concluída", "copied": "Copiada", "failed": "Falhou", "reverted": "Revertida",
+    "pronto": "Pronto", "organizado": "Já organizado", "incerto": "Incerto",
+    "conflito": "Conflito", "aplicado": "Aplicado", "erro": "Erro",
 }
 STATUS_COLORS = {
     "zero_bytes": theme.WARN, "invalid": theme.DANGER, "missing": theme.MUTED,
     "quarantined": theme.ACCENT_2, "failed": theme.DANGER, "reverted": theme.MUTED,
     "completed": theme.OK, "ok": theme.OK, "copied": theme.ACCENT_2,
+    "pronto": theme.ACCENT, "organizado": theme.OK, "incerto": theme.WARN,
+    "conflito": theme.DANGER, "aplicado": theme.OK, "erro": theme.DANGER,
 }
 
 
